@@ -7,4 +7,3 @@
  Иван Иванов - ivanov93@vk.com
  Дмитрий Васильченко - Dimitriy303@yandex.ru
  Александр Ботурлов - 
-<h3 align="center">Computer science student, IT news writer from Russia 🇷🇺</h3>
