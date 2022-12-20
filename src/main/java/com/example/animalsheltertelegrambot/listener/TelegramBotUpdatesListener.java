@@ -36,11 +36,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             if (update.message() != null && "/start".equals(update.message().text())) {
                 telegramBot.execute(mainMenu(update.message().chat().id()));
             }
-            //Конфигурирование нажатия кнопок в главном меню
+            //Конфигурирование нажатия кнопок во всех меню
             if (update.callbackQuery() != null) {
-                String data = update.callbackQuery().data();
-                telegramBot.execute(new SendMessage(update.callbackQuery().message().chat().id(), data));
+                if (update.callbackQuery().data().equals("1")) {
+                    telegramBot.execute(infoMenu(update.callbackQuery().message().chat().id()));
+                } else {
+                    telegramBot.execute(new SendMessage(update.callbackQuery().message().chat().id(), update.callbackQuery().data()));
+                }
             }
+
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
@@ -71,8 +75,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private SendMessage infoMenu(long chatId) {
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         InlineKeyboardButton button1 = new InlineKeyboardButton("Рассказать о приюте").callbackData("text1");
-        InlineKeyboardButton button2 = new InlineKeyboardButton("Выдать расписание работы приюта и адрес, схему проезда").callbackData("text2");
-        InlineKeyboardButton button3 = new InlineKeyboardButton("Выдать общие рекомендации о технике безопасности на территории приюта").callbackData("text3");
+        InlineKeyboardButton button2 = new InlineKeyboardButton("Расписание работы приюта и адрес, схему проезда").callbackData("text2");
+        InlineKeyboardButton button3 = new InlineKeyboardButton("Рекомендации о технике безопасности на территории приюта").callbackData("text3");
         InlineKeyboardButton button4 = new InlineKeyboardButton("Принять и записать контактные данные для связи").callbackData("BD");
         InlineKeyboardButton button5 = new InlineKeyboardButton("Позвать волонтера").callbackData("5");
         inlineKeyboard.addRow(button1);
