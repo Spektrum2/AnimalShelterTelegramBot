@@ -1,11 +1,13 @@
 --liquibase formatted sql
 
 -- changeset mabelod:1
-CREATE TABLE "user"
+CREATE TABLE user_data
 (
-    id              BIGSERIAL primary key ,
-    id_chat         BIGINT,
-    login           TEXT,
-    contact_details TEXT
+    id           BIGSERIAL primary key,
+    id_chat      BIGINT,
+    name        TEXT,
+    phone_number TEXT
 );
+
+
 

@@ -8,7 +8,7 @@ import java.util.Objects;
  * Класс пользователь для хранения контактных данных пользователя
  */
 @Entity
-public class User {
+public class UserData {
     /**
      * Поле id пользователя
      */
@@ -22,33 +22,33 @@ public class User {
     /**
      * Поле login пользователя
      */
-    private String login;
+    private String name;
     /**
      * Поле для хранения контактных данных пользователя
      */
-    private String contactDetails;
+    private String phoneNumber;
 
     /**
      * Конструктор - создание нового объекта
      *
      * @param idChat         - id чата
-     * @param login          - login пользователя
-     * @param contactDetails - контактные данные пользователя
+     * @param name          - login пользователя
+     * @param phoneNumber - контактные данные пользователя
      */
-    public User(Long idChat, String login, String contactDetails) {
+    public UserData(Long idChat, String name, String phoneNumber) {
         this.idChat = idChat;
-        this.login = login;
-        this.contactDetails = contactDetails;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
     }
 
     /**
      * Пустой конструктор
      */
-    public User() {
+    public UserData() {
     }
 
     /**
-     * Метод получения значения поля {@link User#id}
+     * Метод получения значения поля {@link UserData#id}
      *
      * @return - возвращает id пользователя
      */
@@ -57,7 +57,7 @@ public class User {
     }
 
     /**
-     * Метод изменения значения поля {@link User#id}
+     * Метод изменения значения поля {@link UserData#id}
      *
      * @param id -id пользователя
      */
@@ -66,7 +66,7 @@ public class User {
     }
 
     /**
-     * Метод получения значения поля {@link User#idChat}
+     * Метод получения значения поля {@link UserData#idChat}
      *
      * @return - возвращает id чата
      */
@@ -75,7 +75,7 @@ public class User {
     }
 
     /**
-     * Метод изменения значения поля {@link User#idChat}
+     * Метод изменения значения поля {@link UserData#idChat}
      *
      * @param idChat - id чата
      */
@@ -84,39 +84,39 @@ public class User {
     }
 
     /**
-     * Метод получения значения поля {@link User#login}
+     * Метод получения значения поля {@link UserData#name}
      *
      * @return - возвращает login пользователя
      */
-    public String getLogin() {
-        return login;
+    public String getName() {
+        return name;
     }
 
     /**
-     * Метод изменения значения поля {@link User#login}
+     * Метод изменения значения поля {@link UserData#name}
      *
-     * @param login - login пользователя
+     * @param name - login пользователя
      */
-    public void setLogin(String login) {
-        this.login = login;
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
-     * Метод получения значения поля {@link User#contactDetails}
+     * Метод получения значения поля {@link UserData#phoneNumber}
      *
      * @return - возвращает контактные данные пользователя
      */
-    public String getContactDetails() {
-        return contactDetails;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
     /**
-     * Метод изменения значения поля {@link User#contactDetails}
+     * Метод изменения значения поля {@link UserData#phoneNumber}
      *
-     * @param contactDetails - контактные данные пользователя
+     * @param phoneNumber - контактные данные пользователя
      */
-    public void setContactDetails(String contactDetails) {
-        this.contactDetails = contactDetails;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     /**
@@ -129,8 +129,8 @@ public class User {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(idChat, user.idChat) && Objects.equals(login, user.login) && Objects.equals(contactDetails, user.contactDetails);
+        UserData userData = (UserData) o;
+        return Objects.equals(id, userData.id) && Objects.equals(idChat, userData.idChat) && Objects.equals(name, userData.name) && Objects.equals(phoneNumber, userData.phoneNumber);
     }
 
     /**
@@ -140,7 +140,7 @@ public class User {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, idChat, login, contactDetails);
+        return Objects.hash(id, idChat, name, phoneNumber);
     }
 
     /**
@@ -153,8 +153,8 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", idChat=" + idChat +
-                ", login='" + login + '\'' +
-                ", contactDetails='" + contactDetails + '\'' +
+                ", login='" + name + '\'' +
+                ", contactDetails='" + phoneNumber + '\'' +
                 '}';
     }
 }
