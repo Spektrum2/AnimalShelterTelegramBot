@@ -27,7 +27,7 @@ CREATE TABLE photo_of_animal
 -- changeset dmitriy:3
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'report'
-CREATE TABLE "report"
+CREATE TABLE report
 (
     id                 BIGSERIAL primary key,
     "name"             TEXT,
