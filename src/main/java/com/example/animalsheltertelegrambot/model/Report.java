@@ -1,9 +1,6 @@
 package com.example.animalsheltertelegrambot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
@@ -34,6 +31,17 @@ public class Report {
      * Поле,которое описывает изменения в поведении у животного
      */
     private String behaviorChange;
+    /**
+     * Поле для связи с таблицей Userdata
+     */
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserData userData;
+    /**
+     * Поле для связи с таблицей PhotoOfAnimal
+     */
+    @OneToOne
+    private PhotoOfAnimal photoOfAnimal;
 
     /**
      * Конструктор - создание нового объекта
@@ -117,8 +125,6 @@ public class Report {
      *
      * @return - возвращает информацию о состоянии здоровья
      */
-
-
     public String getHealth() {
         return health;
     }
@@ -137,7 +143,6 @@ public class Report {
      *
      * @return - возвращает информацию об изменении поведения животного
      */
-
     public String getBehaviorChange() {
         return behaviorChange;
     }
@@ -147,9 +152,44 @@ public class Report {
      *
      * @param - изменение в поведении
      */
-
     public void setBehaviorChange(String behaviorChange) {
         this.behaviorChange = behaviorChange;
+    }
+
+    /**
+     * Метод получения значения поля {@link Report#userData}
+     *
+     * @return - возвращает пользователя
+     */
+    public UserData getUserData() {
+        return userData;
+    }
+
+    /**
+     * Метод изменения значения поля {@link Report#userData}
+     *
+     * @param userData - пользователь
+     */
+    public void setUserData(UserData userData) {
+        this.userData = userData;
+    }
+
+    /**
+     * Метод получения значения поля {@link Report#photoOfAnimal}
+     *
+     * @return - возвращает фотографию животного
+     */
+    public PhotoOfAnimal getPhotoOfAnimal() {
+        return photoOfAnimal;
+    }
+
+    /**
+     * Метод изменения значения поля {@link Report#photoOfAnimal}
+     *
+     * @param photoOfAnimal - фотография животного
+     */
+    public void setPhotoOfAnimal(PhotoOfAnimal photoOfAnimal) {
+        this.photoOfAnimal = photoOfAnimal;
     }
 
     /**

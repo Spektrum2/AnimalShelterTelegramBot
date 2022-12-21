@@ -20,7 +20,22 @@ CREATE TABLE photo_of_animal
     file_path  TEXT,
     file_size  BIGINT,
     media_type TEXT,
-    data       BYTEA
+    data       BYTEA,
+    report_id  BIGINT
+);
+
+-- changeset dmitriy:3
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'report'
+CREATE TABLE "report"
+(
+    id                 BIGSERIAL primary key,
+    "name"             TEXT,
+    diet               TEXT,
+    health             TEXT,
+    behavior_change    TEXT,
+    user_id            BIGINT,
+    photo_of_animal_id BIGINT
 );
 
 

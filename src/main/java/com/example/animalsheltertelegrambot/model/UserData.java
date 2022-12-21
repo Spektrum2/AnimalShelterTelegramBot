@@ -2,6 +2,7 @@ package com.example.animalsheltertelegrambot.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,6 +28,12 @@ public class UserData {
      * Поле для хранения контактных данных пользователя
      */
     private String phoneNumber;
+
+    /**
+     * Поле для связи с таблицей Report
+     */
+    @OneToMany(mappedBy = "userData")
+    private List<Report> reports;
 
     /**
      * Конструктор - создание нового объекта
@@ -117,6 +124,24 @@ public class UserData {
      */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    /**
+     * Метод получения значения поля {@link UserData#reports}
+     *
+     * @return - возвращает все отчеты пользователя
+     */
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    /**
+     * Метод изменения значения поля {@link UserData#reports}
+     *
+     * @param reports - отчеты пользователя
+     */
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
     }
 
     /**

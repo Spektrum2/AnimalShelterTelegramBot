@@ -1,9 +1,6 @@
 package com.example.animalsheltertelegrambot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 /**
  * Класс для фотографии животного
@@ -32,6 +29,11 @@ public class PhotoOfAnimal {
      * Поле информация о файле
      */
     private byte[] data;
+    /**
+     * Поле для связи с таблицей Report
+     */
+    @OneToOne
+    private Report report;
 
     /**
      * Метод получения значения поля {@link PhotoOfAnimal#id}
@@ -122,4 +124,23 @@ public class PhotoOfAnimal {
     public void setData(byte[] data) {
         this.data = data;
     }
+
+    /**
+     *  Метод получения значения поля {@link PhotoOfAnimal#report}
+     *
+     * @return - возврощает отчет
+     */
+    public Report getReport() {
+        return report;
+    }
+
+    /**
+     * Метод изменения значения поля {@link PhotoOfAnimal#report}
+     *
+     * @param report - отчет
+     */
+    public void setReport(Report report) {
+        this.report = report;
+    }
 }
+
