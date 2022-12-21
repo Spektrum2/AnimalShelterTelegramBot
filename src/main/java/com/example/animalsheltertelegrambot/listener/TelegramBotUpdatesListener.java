@@ -36,7 +36,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Обьявление перменной informationAboutTheShelter с описанием информации о приюте.
      */
-    private String informationAboutTheShelter = "В приюте животных из Астаны находится более 1700 бездомных собак, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
+    private final String informationAboutTheShelter = "В приюте животных из Астаны находится более 1700 бездомных собак, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
             "Дворняги, метисы и породистые. У каждой собаки своя история и свой характер. Многие из них в какой-то момент оказались не нужной игрушкой - их предал хозяин. " +
             "Наш бот создан для того чтобы собаки из приюта обрели свой  дом и получили второй шанс на жизнь. " +
             "Так же мы привлекаем новых волонтеров для помощи приютским собакам.";
@@ -44,13 +44,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Обьявлние переменной workingHours с описанием работы приюта адреса.
      */
-    private String workingHours = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
+    private final String workingHours = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
             " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения).";
 
     /**
      * Обьявлние переменной securityMeasures с рекомендацией о технике безопасности на территории приюта.
      */
-    private String securityMeasures = "— Обувь должна быть на подошве, исключающей непроизвольное скольжение;" +
+    private final String securityMeasures = "— Обувь должна быть на подошве, исключающей непроизвольное скольжение;" +
             "— верхняя одежда должна соответствовать погоде, исключать промокание, а также должна быть облегающей и исключать возможность непроизвольных зацепов за ограждения, строения и иные конструкции." +
             "Запрещается носить в карманах одежды колющие, режущие и стеклянные предметы." +
             "Возможно использование дополнительных средств индивидуальной защиты. Средства индивидуальной защиты должны соответствовать размеру, применяться в исправном, чистом состоянии по назначению и храниться в специально отведенных и оборудованных местах с соблюдением санитарных правил." +
@@ -60,18 +60,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * parsePhone - регулярное выражение для парсинга строки
      */
-    private String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
+    private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
 
 
     /**
      * Обьявление репозитория
      */
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * Инжектим бота + репозиторий
      *
-     * @param telegramBot - бот
+     * @param telegramBot    - бот
      * @param userRepository - репозиторий
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository) {
@@ -97,36 +97,37 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-//            Вызов главного меню с помощью сообщения /start
-                if (update.message() != null && "/start".equals(update.message().text())) {
-                    mainMenu(update.message().chat().id());
-                } else if (update.message() != null && update.message().text().matches(parsePhone)) {
-                    parsing(update.message().text(), update.message().chat().id());
-                } else if (update.message() != null)  {
-                    mailing(update.message().chat().id(), "Моя твоя не понимать");
-                }
+//            Обработка сообщений пользователя
+            if (update.message() != null && "/start".equals(update.message().text())) {
+                mainMenu(update.message().chat().id());
+            } else if (update.message() != null && update.message().text().matches(parsePhone)) {
+                parsing(update.message().text(), update.message().chat().id());
+            } else if (update.message() != null) {
+                mailing(update.message().chat().id(), "Моя твоя не понимать");
+            }
 //            Конфигурирование нажатия кнопок во всех меню
-                    if (update.callbackQuery() != null) {
-                        String data = update.callbackQuery().data();
-                        switch (data) {
-                            case "1" -> infoMenu(update.callbackQuery().message().chat().id());
-                            case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
-                            case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
-                            case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
-                            case "BD" -> mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
-                                            "Например: +7-909-945-4367 Андрей");
-                            case "5" -> mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-                            default -> mailing(update.callbackQuery().message().chat().id(), data);
-                        }
-                    }
+            if (update.callbackQuery() != null) {
+                String data = update.callbackQuery().data();
+                switch (data) {
+                    case "1" -> infoMenu(update.callbackQuery().message().chat().id());
+                    case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
+                    case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
+                    case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
+                    case "BD" -> mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+                                    "Например: +7-909-945-4367 Андрей");
+                    case "5" -> mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+                    default -> mailing(update.callbackQuery().message().chat().id(), data);
+                }
+            }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
     /**
      * Метод парсит стороку и заносит информацию в БД
+     *
      * @param text - сообщение пользователя содержащее номер телефона + имя
-     * @param id - id чата
+     * @param id   - id чата
      */
     private void parsing(String text, Long id) {
         logger.info("Парсинг");
@@ -140,12 +141,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             mailing(id, "Контактные данные сохраненым!");
         }
     }
+
     /**
      * Данные методы отпраляет сообщение пользователю
      *
      * @param chatId          - id чата
      * @param receivedMessage - текст сообщения пользователю
-     * @param inlineKeyboard - текст сообщения меню.
+     * @param inlineKeyboard  - текст сообщения меню.
      */
     public void mailing(long chatId, String receivedMessage, InlineKeyboardMarkup inlineKeyboard) {
         logger.info("Отправка сообщения");

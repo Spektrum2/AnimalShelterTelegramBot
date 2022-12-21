@@ -31,8 +31,8 @@ public class UserData {
     /**
      * Конструктор - создание нового объекта
      *
-     * @param idChat         - id чата
-     * @param name          - login пользователя
+     * @param idChat      - id чата
+     * @param name        - login пользователя
      * @param phoneNumber - контактные данные пользователя
      */
     public UserData(Long idChat, String name, String phoneNumber) {
@@ -86,7 +86,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#name}
      *
-     * @return - возвращает login пользователя
+     * @return - возвращает имя пользователя
      */
     public String getName() {
         return name;
@@ -95,7 +95,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#name}
      *
-     * @param name - login пользователя
+     * @param name - имя пользователя
      */
     public void setName(String name) {
         this.name = name;
@@ -104,7 +104,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#phoneNumber}
      *
-     * @return - возвращает контактные данные пользователя
+     * @return - возвращает телефон пользователя
      */
     public String getPhoneNumber() {
         return phoneNumber;
@@ -113,7 +113,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#phoneNumber}
      *
-     * @param phoneNumber - контактные данные пользователя
+     * @param phoneNumber - телефон пользователя
      */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -123,7 +123,7 @@ public class UserData {
      * Переопределение equals
      *
      * @param o - объект для сравнения
-     * @return - возвращает true или  false
+     * @return - возвращает true или false
      */
     @Override
     public boolean equals(Object o) {

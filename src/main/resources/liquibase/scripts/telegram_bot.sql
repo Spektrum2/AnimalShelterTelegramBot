@@ -1,12 +1,26 @@
 --liquibase formatted sql
 
 -- changeset mabelod:1
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_data'
 CREATE TABLE user_data
 (
     id           BIGSERIAL primary key,
     id_chat      BIGINT,
-    name        TEXT,
+    name         TEXT,
     phone_number TEXT
+);
+
+-- changeset aleksandr:2
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'photo_of_animal'
+CREATE TABLE photo_of_animal
+(
+    id         BIGSERIAL primary key,
+    file_path  TEXT,
+    file_size  BIGINT,
+    media_type TEXT,
+    data       BYTEA
 );
 
 
