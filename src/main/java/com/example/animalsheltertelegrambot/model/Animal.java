@@ -1,9 +1,6 @@
 package com.example.animalsheltertelegrambot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
@@ -25,18 +22,24 @@ public class Animal {
     /**
      * Поле имя животного
      */
-   private String animalName;
+    private String animalName;
+
+    @ManyToOne
+    @JoinColumn(name = "volunteer_id")
+    private Volunteer volunteer;
+
     /**
-     * Конструктор - создание нового объекта
+     * Конструктор  создание нового объекта
      *
-     * @param animalType      - тип животного
-     * @param animalName        - имя животного
+     * @param animalType тип животного
+     * @param animalName имя животного
      */
 
     public Animal(String animalType, String animalName) {
         this.animalType = animalType;
         this.animalName = animalName;
     }
+
     /**
      * Пустой конструктор
      */
@@ -44,10 +47,11 @@ public class Animal {
     public Animal() {
 
     }
+
     /**
      * Метод получения значения поля {@link Animal#id}
      *
-     * @return - возвращает id животного
+     * @return возвращает id животного
      */
     public long getId() {
         return id;
@@ -61,43 +65,66 @@ public class Animal {
     public void setId(long id) {
         this.id = id;
     }
+
     /**
      * Метод получения значения поля {@link Animal#animalType}
      *
-     * @return - возвращает тип животного
+     * @return возвращает тип животного
      */
     public String getAnimalType() {
         return animalType;
     }
+
     /**
      * Метод изменения значения поля {@link Animal#animalType}
      *
-     * @param animalType - тип животного;
+     * @param animalType тип животного;
      */
     public void setAnimalType(String animalType) {
         this.animalType = animalType;
     }
+
     /**
      * Метод получения значения поля {@link Animal#animalName}
      *
-     * @return - возвращает имя животного
+     * @return возвращает имя животного
      */
     public String getAnimalName() {
         return animalName;
     }
+
     /**
      * Метод изменения значения поля {@link Animal#animalName}
      *
-     * @param animalName - имя животного;
+     * @param animalName имя животного;
      */
     public void setAnimalName(String animalName) {
         this.animalName = animalName;
     }
+
+    /**
+     * Метод получения значения поля {@link Animal#volunteer}
+     *
+     * @return возвращает волонтера
+     */
+    public Volunteer getVolunteer() {
+        return volunteer;
+    }
+
+    /**
+     * Метод изменения значения поля {@link Animal#volunteer}
+     *
+     * @param volunteer волонтер
+     */
+    public void setVolunteer(Volunteer volunteer) {
+        this.volunteer = volunteer;
+    }
+
     /**
      * Переопределение equals
      *
-     * @param o - объект для сравнения
-     * @return - возвращает true или false
+     * @param o объект для сравнения
+     * @return возвращает true или false
      */
     @Override
     public boolean equals(Object o) {
@@ -106,19 +133,21 @@ public class Animal {
         Animal animal = (Animal) o;
         return id == animal.id && Objects.equals(animalType, animal.animalType) && Objects.equals(animalName, animal.animalName);
     }
+
     /**
      * Переопределение hashCode
      *
-     * @return - возвращает переопределенный hashCode
+     * @return возвращает переопределенный hashCode
      */
     @Override
     public int hashCode() {
         return Objects.hash(id, animalType, animalName);
     }
+
     /**
      * Переопределение toString
      *
-     * @return - возвращает переопределенный toString
+     * @return возвращает переопределенный toString
      */
     @Override
     public String toString() {
