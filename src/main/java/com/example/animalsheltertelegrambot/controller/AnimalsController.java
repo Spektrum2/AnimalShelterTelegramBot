@@ -9,34 +9,28 @@ import java.util.List;
 @RequestMapping("/adminPanel")
 public class AnimalsController {
     public AnimalsService animalsService;
-
     public AnimalsController(AnimalsService animalsService) {
         this.animalsService = animalsService;
     }
-
     @GetMapping("/allAnimals")
-        public List<Animal> getAnimals() {
-            return null;
-        }
-
-        @PostMapping("/postAnimal")
-        public List<Animal> postAnimals() {
-            return getAnimals();
-        }
-
-        @DeleteMapping("/deleteAnimal")
-        public List<Animal> deleteAnimal(@RequestParam("idUser") int a) {
-            return getAnimals();
-        }
-
-        @PutMapping("/putAnimal")
-        public List<Animal> putAnimal(@RequestParam("idUser") int a) {
-            return getAnimals();
-        }
-
-        @GetMapping("/animal")
-        public List<Animal> getAnimal(@RequestParam("idUser") int a) {
-            return null;
-        }
+    public List<Animal> getAnimals() {
+        return null;
+    }
+    @PostMapping("/postAnimal")
+    public List<Animal> postAnimals() {
+        return getAnimals();
+    }
+    @DeleteMapping("/deleteAnimal")
+    public List<Animal> deleteAnimal(@RequestParam("idUser") int a) {
+        return getAnimals();
+    }
+    @PutMapping("/putAnimal")
+    public List<Animal> putAnimal(@RequestParam("idUser") int a) {
+        return getAnimals();
+    }
+    @GetMapping("/animal")
+    public List<Animal> getAnimal(@RequestParam("idUser") int a) {
+        return null;
+    }
 
 }
