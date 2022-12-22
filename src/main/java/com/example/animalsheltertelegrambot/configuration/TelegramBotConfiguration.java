@@ -20,7 +20,7 @@ public class TelegramBotConfiguration {
     /**
      * Создание бота с помощью токена
      *
-     * @return - возвращает бота
+     * @return возвращает бота
      */
     @Bean
     public TelegramBot telegramBot() {

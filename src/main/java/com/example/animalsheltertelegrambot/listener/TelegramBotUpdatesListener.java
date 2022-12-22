@@ -71,8 +71,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Инжектим бота + репозиторий
      *
-     * @param telegramBot    - бот
-     * @param userRepository - репозиторий
+     * @param telegramBot    бот
+     * @param userRepository репозиторий
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository) {
         this.telegramBot = telegramBot;
@@ -90,8 +90,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод для обработки сообщений
      *
-     * @param updates available updates - обновления бота
-     * @return - возвращает идентификатор последнего обработанного обновления или подтверждает их все
+     * @param updates available updates обновления бота
+     * @return возвращает идентификатор последнего обработанного обновления или подтверждает их все
      */
     @Override
     public int process(List<Update> updates) {
@@ -113,9 +113,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
                     case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
                     case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
-                    case "BD" -> mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+                    case "BD" ->
+                            mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
                                     "Например: +7-909-945-4367 Андрей");
-                    case "5" -> mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+                    case "5" ->
+                            mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
                     default -> mailing(update.callbackQuery().message().chat().id(), data);
                 }
             }
@@ -126,8 +128,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод парсит стороку и заносит информацию в БД
      *
-     * @param text - сообщение пользователя содержащее номер телефона + имя
-     * @param id   - id чата
+     * @param text сообщение пользователя содержащее номер телефона + имя
+     * @param id   id чата
      */
     private void parsing(String text, Long id) {
         logger.info("Парсинг");
@@ -145,9 +147,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Данные методы отпраляет сообщение пользователю
      *
-     * @param chatId          - id чата
-     * @param receivedMessage - текст сообщения пользователю
-     * @param inlineKeyboard  - текст сообщения меню.
+     * @param chatId          id чата
+     * @param receivedMessage текст сообщения пользователю
+     * @param inlineKeyboard  текст сообщения меню.
      */
     public void mailing(long chatId, String receivedMessage, InlineKeyboardMarkup inlineKeyboard) {
         logger.info("Отправка сообщения");
@@ -164,7 +166,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод создает Главного меню
      *
-     * @param chatId - id чата
+     * @param chatId id чата
      */
     private void mainMenu(long chatId) {
         logger.info("Запуск метода с основным меню");
@@ -183,7 +185,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод создает меню - информация о приюте
      *
-     * @param chatId - id чата
+     * @param chatId id чата
      */
     private void infoMenu(long chatId) {
         logger.info("Запуск метода вспомогательного меню");

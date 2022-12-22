@@ -36,11 +36,17 @@ public class UserData {
     private List<Report> reports;
 
     /**
+     * Поле для связи с таблицей Animal
+     */
+    @OneToOne
+    private Animal animal;
+
+    /**
      * Конструктор - создание нового объекта
      *
-     * @param idChat      - id чата
-     * @param name        - login пользователя
-     * @param phoneNumber - контактные данные пользователя
+     * @param idChat      id чата
+     * @param name        login пользователя
+     * @param phoneNumber контактные данные пользователя
      */
     public UserData(Long idChat, String name, String phoneNumber) {
         this.idChat = idChat;
@@ -57,7 +63,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#id}
      *
-     * @return - возвращает id пользователя
+     * @return возвращает id пользователя
      */
     public Long getId() {
         return id;
@@ -66,7 +72,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#id}
      *
-     * @param id -id пользователя
+     * @param id id пользователя
      */
     public void setId(Long id) {
         this.id = id;
@@ -75,7 +81,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#idChat}
      *
-     * @return - возвращает id чата
+     * @return возвращает id чата
      */
     public Long getIdChat() {
         return idChat;
@@ -84,7 +90,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#idChat}
      *
-     * @param idChat - id чата
+     * @param idChat id чата
      */
     public void setIdChat(Long idChat) {
         this.idChat = idChat;
@@ -93,7 +99,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#name}
      *
-     * @return - возвращает имя пользователя
+     * @return возвращает имя пользователя
      */
     public String getName() {
         return name;
@@ -102,7 +108,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#name}
      *
-     * @param name - имя пользователя
+     * @param name имя пользователя
      */
     public void setName(String name) {
         this.name = name;
@@ -111,7 +117,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#phoneNumber}
      *
-     * @return - возвращает телефон пользователя
+     * @return возвращает телефон пользователя
      */
     public String getPhoneNumber() {
         return phoneNumber;
@@ -120,7 +126,7 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#phoneNumber}
      *
-     * @param phoneNumber - телефон пользователя
+     * @param phoneNumber телефон пользователя
      */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -129,7 +135,7 @@ public class UserData {
     /**
      * Метод получения значения поля {@link UserData#reports}
      *
-     * @return - возвращает все отчеты пользователя
+     * @return возвращает все отчеты пользователя
      */
     public List<Report> getReports() {
         return reports;
@@ -138,17 +144,35 @@ public class UserData {
     /**
      * Метод изменения значения поля {@link UserData#reports}
      *
-     * @param reports - отчеты пользователя
+     * @param reports отчеты пользователя
      */
     public void setReports(List<Report> reports) {
         this.reports = reports;
     }
 
     /**
+     * Метод получения значения поля {@link UserData#animal}
+     *
+     * @return возврощает животное
+     */
+    public Animal getAnimal() {
+        return animal;
+    }
+
+    /**
+     * Метод изменения значения поля {@link UserData#animal}
+     *
+     * @param animal животное
+     */
+    public void setAnimal(Animal animal) {
+        this.animal = animal;
+    }
+
+    /**
      * Переопределение equals
      *
-     * @param o - объект для сравнения
-     * @return - возвращает true или false
+     * @param o объект для сравнения
+     * @return возвращает true или false
      */
     @Override
     public boolean equals(Object o) {
@@ -161,7 +185,7 @@ public class UserData {
     /**
      * Переопределение hashCode
      *
-     * @return - возвращает переопределенный hashCode
+     * @return возвращает переопределенный hashCode
      */
     @Override
     public int hashCode() {
@@ -171,7 +195,7 @@ public class UserData {
     /**
      * Переопределение toString
      *
-     * @return - возвращает переопределенный toString
+     * @return возвращает переопределенный toString
      */
     @Override
     public String toString() {
