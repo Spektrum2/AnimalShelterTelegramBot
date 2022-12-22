@@ -43,8 +43,17 @@ CREATE TABLE report
 CREATE TABLE animal
 (
     id                 BIGSERIAL primary key,
-    animal_type            TEXT,
-    animal_name            TEXT
+    animal_type        TEXT,
+    animal_name        TEXT
+);
+-- changeset dmitriy:5
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'volunteer'
+CREATE TABLE volunteer
+(
+    id                        BIGSERIAL primary key,
+    volunteer_name            TEXT,
+    volunteer_last_name       TEXT
 );
 
 
