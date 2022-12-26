@@ -36,6 +36,12 @@ public class UserData {
     private List<Report> reports;
 
     /**
+     * Поле для связи с таблицей Animal
+     */
+    @OneToOne
+    private Animal animal;
+
+    /**
      * Конструктор - создание нового объекта
      *
      * @param idChat      id чата
@@ -142,6 +148,24 @@ public class UserData {
      */
     public void setReports(List<Report> reports) {
         this.reports = reports;
+    }
+
+    /**
+     * Метод получения значения поля {@link UserData#animal}
+     *
+     * @return возврощает животное
+     */
+    public Animal getAnimal() {
+        return animal;
+    }
+
+    /**
+     * Метод изменения значения поля {@link UserData#animal}
+     *
+     * @param animal животное
+     */
+    public void setAnimal(Animal animal) {
+        this.animal = animal;
     }
 
     /**
