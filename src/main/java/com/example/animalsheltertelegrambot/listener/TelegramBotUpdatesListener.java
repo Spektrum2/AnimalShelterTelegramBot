@@ -6,8 +6,6 @@ import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 
-import com.pengrad.telegrambot.model.Document;
-import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -18,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,6 +64,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
 
+    private final String securityData = "Для получение пропуска на территорию приюта, пожалуйста, езжайте к центральному входу, по приезду наберите номер 5959";
+    private Integer animalType = 0;
+    private final String rulesForGettingToKnowAnAnimal = "Веди себя хорошо, не балуйся";
+    private final String listOfDocuments = "Паспорт";
+    private final String animalTransportation = "Клетка для перевозки";
+    private final String animalAdaptation = "Мыть, кормить, любить, не бить";
+    private final String adultAnimalAdaptation = "Мыть, кормить, любить, не бить, выводить гулять";
+    private final String adaptationOfAnAnimalWithDisabilities = "Мыть, кормить, любить, не бить, выводить гулять";
+    private final String tipsFromADogHandler = "Не бить палкой";
+    private final String recommendationForDogHandlers = "Тетя Зина, Дядя Толя";
+    private final String reasonForRefusal = "Плохой запах";
+
 
     /**
      * Обьявление репозитория
@@ -105,47 +116,88 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 //            Обработка сообщений пользователя
-            long reportId;
-            if (update.message() != null && "/start".equals(update.message().text())) {
-                //mainMenu(update.message().chat().id());
-                testMenu(update.message().chat().id());
-            } else if (update.message() != null && "Узнать информацию о приюте".equals(update.message().text())) {
-                test2Menu(update.message().chat().id());
-            } else if (update.message() != null && "Назад".equals(update.message().text())) {
-                testMenu(update.message().chat().id());
-            } else if (update.message() != null && update.message().document() == null && update.message().photo() == null && update.message().text().matches(parsePhone)) {
-                parsing(update.message().text(), update.message().chat().id());
-            } else if (update.message().photo() != null) {
-                mailing(update.callbackQuery().message().chat().id(), "Пришлите имя животного" + "Например: Имя животного - Бобик");
-                PhotoSize[] photoSizes = update.message().photo();
-                reportId = photoOfAnimalService.uploadPhoto(photoSizes[2]);
-            } else if (update.message().document() != null) {
-                mailing(update.callbackQuery().message().chat().id(), "Пришлите имя животного" + "Например: Имя животного - Бобик");
-                Document document = update.message().document();
-                reportId = photoOfAnimalService.uploadPhoto(document);
+            String text = update.message().text();
+            Long chatId = update.message().chat().id();
+            if (update.message() != null && text.matches(parsePhone)) {
+                parsing(text, chatId);
             } else if (update.message() != null) {
-                mailing(update.message().chat().id(), "Моя твоя не понимать");
-            }
-//            Конфигурирование нажатия кнопок во всех меню
-            if (update.callbackQuery() != null) {
-                String data = update.callbackQuery().data();
-                switch (data) {
-                    case "1" -> infoMenu(update.callbackQuery().message().chat().id());
-                    case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
-                    case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
-                    case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
-                    case "BD" ->
-                            mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
-                                    "Например: +7-909-945-4367 Андрей");
-                    case "5" ->
-                            mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-                    case "3" -> mailing(update.callbackQuery().message().chat().id(), "Пришлите фотографию");
-                    default -> mailing(update.callbackQuery().message().chat().id(), data);
+                switch (text) {
+                    case "/start" -> mainMenu(chatId);
+                    case "Приют для собак" -> {
+                        animalType = 1;
+                        shelterMenu(chatId);
+                    }
+                    case "Приют для кошек" -> {
+                        animalType = 2;
+                        shelterMenu(chatId);
+                    }
+                    case "Узнать информацию о приюте" -> infoMenu(chatId);
+                    case "Назад" -> mainMenu(chatId);
+                    case "Рассказать о приюте" -> mailing(chatId, informationAboutTheShelter);
+                    case "Расписание работы приюта и адрес, схема проезда" -> mailing(chatId, workingHours);
+                    case "Рекомендации о технике безопасности на территории приюта" -> mailing(chatId, securityMeasures);
+                    case "Принять и записать контактные данные для связи" -> mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+                            "Например: +7-909-945-4367 Андрей");
+                    case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, securityData);
+                    case "Позвать волонтера" -> mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+                    case "Как взять животное из приюта" -> infoAboutTheAnimalMenu(chatId, animalType);
+                    case "Правила знакомства с животным" -> mailing(chatId, rulesForGettingToKnowAnAnimal);
+                    case "Список документов, необходимых для того, чтобы взять животное из приюта" -> mailing(chatId, listOfDocuments);
+                    case "Рекомендации по транспортировке животного" -> mailing(chatId, animalTransportation);
+                    case "Рекомендации по обустройству дома щенка", "Рекомендации по обустройству дома котенка" ->
+                            mailing(chatId, animalAdaptation);
+                    case "Рекомендации по обустройству дома взрослой собаки", "Рекомендации по обустройству дома взрослого кота/кошки"
+                        -> mailing(chatId, adultAnimalAdaptation);
+                    case "Советы кинолога по первичному общению с собакой" -> mailing(chatId, tipsFromADogHandler);
+                    case "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой" -> mailing(chatId, recommendationForDogHandlers);
+                    case "Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта"
+                            -> mailing(chatId, reasonForRefusal);
+                    case "Записать контактные данные для связи" -> mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+                            "Например: +7-909-945-4367 Андрей");
+                    case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
+                        mailing(chatId, adaptationOfAnAnimalWithDisabilities);
+                    default -> mailing(chatId, "Моя твоя не понимать");
                 }
             }
+//            if (update.message() != null && "/start".equals(text)) {
+//                mainMenu(chatId);
+//            } else if (update.message() != null && "Приют для собак".equals(text)) {
+//                animalType = 1;
+//                shelterMenu(chatId);
+//            } else if (update.message() != null && "Приют для кошек".equals(text)) {
+//                animalType = 2;
+//                shelterMenu(chatId);
+//            } else if (update.message() != null && "Узнать информацию о приюте".equals(text)) {
+//                infoMenu(chatId);
+//            } else if (update.message() != null && "Назад".equals(text)) {
+//                mainMenu(chatId);
+//            } else if (update.message() != null) {
+//                mailing(chatId, "Моя твоя не понимать");
+//            }
+//            Конфигурирование нажатия кнопок во всех меню
+//            if (update.callbackQuery() != null) {
+//                String data = update.callbackQuery().data();
+//                switch (data) {
+//                    case "1" -> infoMenu(update.callbackQuery().message().chat().id());
+//                    case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
+//                    case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
+//                    case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
+//                    case "BD" ->
+//                            mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+//                                    "Например: +7-909-945-4367 Андрей");
+//                    case "5" ->
+//                            mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+//                    case "3" -> mailing(update.callbackQuery().message().chat().id(), "Пришлите фотографию");
+//                    default -> mailing(update.callbackQuery().message().chat().id(), data);
+//                }
+//            }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+
+//    private void savePhone(Long chatId, Integer animalType) {
+//
+//    }
 
     /**
      * Метод парсит стороку и заносит информацию в БД
@@ -171,11 +223,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      *
      * @param chatId          id чата
      * @param receivedMessage текст сообщения пользователю
-     * @param inlineKeyboard  текст сообщения меню.
+     * @param replyKeyboardMarkup  текст сообщения меню.
      */
-    public void mailing(long chatId, String receivedMessage, InlineKeyboardMarkup inlineKeyboard) {
+    public void mailing(long chatId, String receivedMessage, ReplyKeyboardMarkup replyKeyboardMarkup) {
         logger.info("Отправка сообщения");
-        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(inlineKeyboard);
+        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(replyKeyboardMarkup);
         SendResponse response = telegramBot.execute(message);
     }
 
@@ -185,59 +237,86 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         SendResponse response = telegramBot.execute(message);
     }
 
-    /**
-     * Метод создает Главного меню
-     *
-     * @param chatId id чата
-     */
+//    /**
+//     * Метод создает Главного меню
+//     *
+//     * @param chatId id чата
+//     */
+//    private void mainMenu(long chatId) {
+//        logger.info("Запуск метода с основным меню");
+//        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+//        InlineKeyboardButton button1 = new InlineKeyboardButton("Узнать информацию о приюте").callbackData("1");
+//        InlineKeyboardButton button2 = new InlineKeyboardButton("Как взять собаку из приюта").callbackData("2");
+//        InlineKeyboardButton button3 = new InlineKeyboardButton("Прислать отчет о питомце").callbackData("3");
+//        InlineKeyboardButton button4 = new InlineKeyboardButton("Позвать волонтера").callbackData("4");
+//        inlineKeyboard.addRow(button1);
+//        inlineKeyboard.addRow(button2);
+//        inlineKeyboard.addRow(button3);
+//        inlineKeyboard.addRow(button4);
+//        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
+//    }
+
+//    /**
+//     * Метод создает меню - информация о приюте
+//     *
+//     * @param chatId id чата
+//     */
+//    private void infoMenu(long chatId) {
+//        logger.info("Запуск метода вспомогательного меню");
+//        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+//        InlineKeyboardButton button1 = new InlineKeyboardButton("Рассказать о приюте").callbackData("text1");
+//        InlineKeyboardButton button2 = new InlineKeyboardButton("Расписание работы приюта и адрес, схема проезда").callbackData("text2");
+//        InlineKeyboardButton button3 = new InlineKeyboardButton("Рекомендации о технике безопасности на территории приюта").callbackData("text3");
+//        InlineKeyboardButton button4 = new InlineKeyboardButton("Принять и записать контактные данные для связи").callbackData("BD");
+//        InlineKeyboardButton button5 = new InlineKeyboardButton("Позвать волонтера").callbackData("5");
+//        inlineKeyboard.addRow(button1);
+//        inlineKeyboard.addRow(button2);
+//        inlineKeyboard.addRow(button3);
+//        inlineKeyboard.addRow(button4);
+//        inlineKeyboard.addRow(button5);
+//        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
+//    }
+
+
     private void mainMenu(long chatId) {
-        logger.info("Запуск метода с основным меню");
-        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        InlineKeyboardButton button1 = new InlineKeyboardButton("Узнать информацию о приюте").callbackData("1");
-        InlineKeyboardButton button2 = new InlineKeyboardButton("Как взять собаку из приюта").callbackData("2");
-        InlineKeyboardButton button3 = new InlineKeyboardButton("Прислать отчет о питомце").callbackData("3");
-        InlineKeyboardButton button4 = new InlineKeyboardButton("Позвать волонтера").callbackData("4");
-        inlineKeyboard.addRow(button1);
-        inlineKeyboard.addRow(button2);
-        inlineKeyboard.addRow(button3);
-        inlineKeyboard.addRow(button4);
-        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
-    }
-
-    /**
-     * Метод создает меню - информация о приюте
-     *
-     * @param chatId id чата
-     */
-    private void infoMenu(long chatId) {
-        logger.info("Запуск метода вспомогательного меню");
-        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        InlineKeyboardButton button1 = new InlineKeyboardButton("Рассказать о приюте").callbackData("text1");
-        InlineKeyboardButton button2 = new InlineKeyboardButton("Расписание работы приюта и адрес, схема проезда").callbackData("text2");
-        InlineKeyboardButton button3 = new InlineKeyboardButton("Рекомендации о технике безопасности на территории приюта").callbackData("text3");
-        InlineKeyboardButton button4 = new InlineKeyboardButton("Принять и записать контактные данные для связи").callbackData("BD");
-        InlineKeyboardButton button5 = new InlineKeyboardButton("Позвать волонтера").callbackData("5");
-        inlineKeyboard.addRow(button1);
-        inlineKeyboard.addRow(button2);
-        inlineKeyboard.addRow(button3);
-        inlineKeyboard.addRow(button4);
-        inlineKeyboard.addRow(button5);
-        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
-    }
-
-    private void testMenu(long chatId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Узнать информацию о приюте", "Как взять собаку из приюта"},
-                new String[]{"Прислать отчет о питомце", "Позвать волонтера"});
-        telegramBot.execute(new SendMessage(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.").replyMarkup(replyKeyboardMarkup));
+                ("Приют для собак"), "Приют для кошек");
+                mailing(chatId, "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:", replyKeyboardMarkup);
     }
-
-    private void test2Menu(long chatId) {
+    private void shelterMenu(long chatId) {
+            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new String[]{"Узнать информацию о приюте", "Как взять животное из приюта"},
+                    new String[]{"Прислать отчет о питомце", "Позвать волонтера"});
+            mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", replyKeyboardMarkup);
+    }
+    private void infoMenu(long chatId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 new String[]{"Рассказать о приюте", "Расписание работы приюта и адрес, схема проезда"},
                 new String[]{"Рекомендации о технике безопасности на территории приюта", "Принять и записать контактные данные для связи"},
-                new String[]{"Позвать волонтера", "Назад"});
-        telegramBot.execute(new SendMessage(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.").replyMarkup(replyKeyboardMarkup));
+                new String[]{"Контактные данные охраны для оформления пропуска на машину", "Позвать волонтера"},
+                new String[]{"Назад"});
+        mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+    }
+
+    private void infoAboutTheAnimalMenu(long chatId, int animalType) {
+        if (animalType == 1) {
+            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
+                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома щенка"},
+                    new String[]{"Рекомендации по обустройству дома взрослой собаки", "Рекомендаций по обустройству дома собаки с ограниченными возможностями"},
+                    new String[]{"Советы кинолога по первичному общению с собакой", "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой"},
+                    new String[]{"Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Записать контактные данные для связи"},
+                    new String[]{"Позвать волонтера", "Назад"});
+            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+        } else if (animalType == 2) {
+            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
+                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома котенка"},
+                    new String[]{"Рекомендации по обустройству дома взрослого кота/кошки", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями"},
+                    new String[]{"Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта", "Записать контактные данные для связи"},
+                    new String[]{"Позвать волонтера", "Назад"});
+            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+        }
     }
 
 }
