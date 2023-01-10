@@ -1,0 +1,10 @@
+{
+  "callback_query": {
+    "message": {
+      "chat": {
+        "id": 123
+      }
+    },
+    "data": "%command%"
+  }
+}

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Класс животное, для хранения информации о животном
+ * Класс Волонтер, для хранения информации о волонтере
  */
 @Entity
 public class Volunteer {

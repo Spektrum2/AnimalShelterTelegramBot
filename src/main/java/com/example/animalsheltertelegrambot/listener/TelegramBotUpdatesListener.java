@@ -131,7 +131,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param text сообщение пользователя содержащее номер телефона + имя
      * @param id   id чата
      */
-    private void parsing(String text, Long id) {
+    public void parsing(String text, Long id) {
         logger.info("Парсинг");
         Pattern pattern = Pattern.compile(parsePhone);
         Matcher matcher = pattern.matcher(text);
@@ -140,7 +140,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             String name = matcher.group(3);
             UserData userData = new UserData(id, name, phone);
             userRepository.save(userData);
-            mailing(id, "Контактные данные сохраненым!");
+            mailing(id, "Контактные данные сохранены!");
         }
     }
 
