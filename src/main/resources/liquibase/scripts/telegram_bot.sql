@@ -31,6 +31,7 @@ CREATE TABLE user_data
     id_chat      BIGINT,
     name         TEXT,
     phone_number TEXT,
+    shelter      INT,
     animal_id    BIGINT REFERENCES animal (id)
 );
 

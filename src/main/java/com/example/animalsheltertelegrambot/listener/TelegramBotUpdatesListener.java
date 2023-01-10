@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,16 +38,25 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Обьявление перменной informationAboutTheShelter с описанием информации о приюте.
      */
-    private final String informationAboutTheShelter = "В приюте животных из Астаны находится более 1700 бездомных собак, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
+    private final String informationAboutTheShelterDog = "В приюте животных из Астаны находится более 1700 бездомных собак, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
             "Дворняги, метисы и породистые. У каждой собаки своя история и свой характер. Многие из них в какой-то момент оказались не нужной игрушкой - их предал хозяин. " +
             "Наш бот создан для того чтобы собаки из приюта обрели свой  дом и получили второй шанс на жизнь. " +
             "Так же мы привлекаем новых волонтеров для помощи приютским собакам.";
 
+    private final String informationAboutTheShelterCat = "В приюте животных из Астаны находится более 1700 бездомных котов, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
+            "Сиамские, рыжие и лысые. У каждого кота своя история и свой характер. Многие из них в какой-то момент оказались не нужной игрушкой - их предал хозяин. " +
+            "Наш бот создан для того чтобы коты из приюта обрели свой  дом и получили второй шанс на жизнь. " +
+            "Так же мы привлекаем новых волонтеров для помощи приютским котам и кошкам.";
     /**
      * Обьявлние переменной workingHours с описанием работы приюта адреса.
      */
-    private final String workingHours = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
-            " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения).";
+    private final String workingHoursDog = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
+            " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения)." +
+            "Адрес: Третья улица строителей, дом 15";
+
+    private final String workingHoursCat = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
+            " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения)." +
+            "Адрес: Шестой замоскворецкий переулок";
 
     /**
      * Обьявлние переменной securityMeasures с рекомендацией о технике безопасности на территории приюта.
@@ -75,6 +84,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final String tipsFromADogHandler = "Не бить палкой";
     private final String recommendationForDogHandlers = "Тетя Зина, Дядя Толя";
     private final String reasonForRefusal = "Плохой запах";
+    private HashMap<Long, Integer> save = new HashMap<>();
 
 
     /**
@@ -122,25 +132,41 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 parsing(text, chatId);
             } else if (update.message() != null) {
                 switch (text) {
-                    case "/start" -> mainMenu(chatId);
+                    case "/start", "Выход" -> mainMenu(chatId);
                     case "Приют для собак" -> {
                         animalType = 1;
+                        save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
                     case "Приют для кошек" -> {
                         animalType = 2;
+                        save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
                     case "Узнать информацию о приюте" -> infoMenu(chatId);
-                    case "Назад" -> mainMenu(chatId);
-                    case "Рассказать о приюте" -> mailing(chatId, informationAboutTheShelter);
-                    case "Расписание работы приюта и адрес, схема проезда" -> mailing(chatId, workingHours);
+                    case "Рассказать о приюте" -> {
+                        if (save.get(chatId) == 1) {
+                            mailing(chatId, informationAboutTheShelterDog);
+                        } else if (save.get(chatId) == 2){
+                            mailing(chatId, informationAboutTheShelterCat);
+                        }
+                    }
+                    case "Расписание работы приюта и адрес, схема проезда" -> {
+                        if (save.get(chatId) == 1) {
+                            mailing(chatId, workingHoursDog);
+                        } else if (save.get(chatId) == 2) {
+                            mailing(chatId, workingHoursCat);
+                        }
+                    }
                     case "Рекомендации о технике безопасности на территории приюта" -> mailing(chatId, securityMeasures);
                     case "Принять и записать контактные данные для связи" -> mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
                             "Например: +7-909-945-4367 Андрей");
                     case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, securityData);
                     case "Позвать волонтера" -> mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-                    case "Как взять животное из приюта" -> infoAboutTheAnimalMenu(chatId, animalType);
+                    case "Как взять животное из приюта" -> {
+                        animalType = save.get(chatId);
+                        infoAboutTheAnimalMenu(chatId, animalType);
+                    }
                     case "Правила знакомства с животным" -> mailing(chatId, rulesForGettingToKnowAnAnimal);
                     case "Список документов, необходимых для того, чтобы взять животное из приюта" -> mailing(chatId, listOfDocuments);
                     case "Рекомендации по транспортировке животного" -> mailing(chatId, animalTransportation);
@@ -156,47 +182,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             "Например: +7-909-945-4367 Андрей");
                     case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
                         mailing(chatId, adaptationOfAnAnimalWithDisabilities);
+                    case "Назад" -> shelterMenu(chatId);
                     default -> mailing(chatId, "Моя твоя не понимать");
                 }
             }
-//            if (update.message() != null && "/start".equals(text)) {
-//                mainMenu(chatId);
-//            } else if (update.message() != null && "Приют для собак".equals(text)) {
-//                animalType = 1;
-//                shelterMenu(chatId);
-//            } else if (update.message() != null && "Приют для кошек".equals(text)) {
-//                animalType = 2;
-//                shelterMenu(chatId);
-//            } else if (update.message() != null && "Узнать информацию о приюте".equals(text)) {
-//                infoMenu(chatId);
-//            } else if (update.message() != null && "Назад".equals(text)) {
-//                mainMenu(chatId);
-//            } else if (update.message() != null) {
-//                mailing(chatId, "Моя твоя не понимать");
-//            }
-//            Конфигурирование нажатия кнопок во всех меню
-//            if (update.callbackQuery() != null) {
-//                String data = update.callbackQuery().data();
-//                switch (data) {
-//                    case "1" -> infoMenu(update.callbackQuery().message().chat().id());
-//                    case "text1" -> mailing(update.callbackQuery().message().chat().id(), informationAboutTheShelter);
-//                    case "text2" -> mailing(update.callbackQuery().message().chat().id(), workingHours);
-//                    case "text3" -> mailing(update.callbackQuery().message().chat().id(), securityMeasures);
-//                    case "BD" ->
-//                            mailing(update.callbackQuery().message().chat().id(), "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
-//                                    "Например: +7-909-945-4367 Андрей");
-//                    case "5" ->
-//                            mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-//                    case "3" -> mailing(update.callbackQuery().message().chat().id(), "Пришлите фотографию");
-//                    default -> mailing(update.callbackQuery().message().chat().id(), data);
-//                }
-//            }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-//    private void savePhone(Long chatId, Integer animalType) {
-//
+//    private void saveAnimalType(Long chatId, Integer animalType) {
+//        save.put(chatId, animalType);
 //    }
 
     /**
@@ -212,7 +207,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         if (matcher.matches()) {
             String phone = matcher.group(1);
             String name = matcher.group(3);
-            UserData userData = new UserData(id, name, phone);
+            UserData userData = new UserData(id, name, phone, save.get(id));
             userRepository.save(userData);
             mailing(id, "Контактные данные сохранены!");
         }
@@ -227,7 +222,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void mailing(long chatId, String receivedMessage, ReplyKeyboardMarkup replyKeyboardMarkup) {
         logger.info("Отправка сообщения");
-        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(inlineKeyboard);
+        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(replyKeyboardMarkup);
         SendResponse response = telegramBot.execute(message);
     }
 
@@ -237,59 +232,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         SendResponse response = telegramBot.execute(message);
     }
 
-//    /**
-//     * Метод создает Главного меню
-//     *
-//     * @param chatId id чата
-//     */
-//    private void mainMenu(long chatId) {
-//        logger.info("Запуск метода с основным меню");
-//        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-//        InlineKeyboardButton button1 = new InlineKeyboardButton("Узнать информацию о приюте").callbackData("1");
-//        InlineKeyboardButton button2 = new InlineKeyboardButton("Как взять собаку из приюта").callbackData("2");
-//        InlineKeyboardButton button3 = new InlineKeyboardButton("Прислать отчет о питомце").callbackData("3");
-//        InlineKeyboardButton button4 = new InlineKeyboardButton("Позвать волонтера").callbackData("4");
-//        inlineKeyboard.addRow(button1);
-//        inlineKeyboard.addRow(button2);
-//        inlineKeyboard.addRow(button3);
-//        inlineKeyboard.addRow(button4);
-//        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
-//    }
-
-//    /**
-//     * Метод создает меню - информация о приюте
-//     *
-//     * @param chatId id чата
-//     */
-//    private void infoMenu(long chatId) {
-//        logger.info("Запуск метода вспомогательного меню");
-//        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-//        InlineKeyboardButton button1 = new InlineKeyboardButton("Рассказать о приюте").callbackData("text1");
-//        InlineKeyboardButton button2 = new InlineKeyboardButton("Расписание работы приюта и адрес, схема проезда").callbackData("text2");
-//        InlineKeyboardButton button3 = new InlineKeyboardButton("Рекомендации о технике безопасности на территории приюта").callbackData("text3");
-//        InlineKeyboardButton button4 = new InlineKeyboardButton("Принять и записать контактные данные для связи").callbackData("BD");
-//        InlineKeyboardButton button5 = new InlineKeyboardButton("Позвать волонтера").callbackData("5");
-//        inlineKeyboard.addRow(button1);
-//        inlineKeyboard.addRow(button2);
-//        inlineKeyboard.addRow(button3);
-//        inlineKeyboard.addRow(button4);
-//        inlineKeyboard.addRow(button5);
-//        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
-//    }
-
-
     private void mainMenu(long chatId) {
+        logger.info("Запуск меню выбора приюта");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 ("Приют для собак"), "Приют для кошек");
                 mailing(chatId, "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:", replyKeyboardMarkup);
     }
     private void shelterMenu(long chatId) {
-            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                    new String[]{"Узнать информацию о приюте", "Как взять животное из приюта"},
-                    new String[]{"Прислать отчет о питомце", "Позвать волонтера"});
-            mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", replyKeyboardMarkup);
+        logger.info("Запуск основного меню");
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                new String[]{"Узнать информацию о приюте", "Как взять животное из приюта"},
+                new String[]{"Прислать отчет о питомце", "Позвать волонтера"},
+                new String[]{"Выход"});
+                mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", replyKeyboardMarkup);
     }
     private void infoMenu(long chatId) {
+        logger.info("Запуск информационного меню");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 new String[]{"Рассказать о приюте", "Расписание работы приюта и адрес, схема проезда"},
                 new String[]{"Рекомендации о технике безопасности на территории приюта", "Принять и записать контактные данные для связи"},
@@ -300,6 +258,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private void infoAboutTheAnimalMenu(long chatId, int animalType) {
         if (animalType == 1) {
+            logger.info("Запуск меню собаки");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                     new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
                     new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома щенка"},
@@ -309,6 +268,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     new String[]{"Позвать волонтера", "Назад"});
             mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
         } else if (animalType == 2) {
+            logger.info("Запуск меню кота");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                     new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
                     new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома котенка"},
