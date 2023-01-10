@@ -2,6 +2,7 @@ package com.example.animalsheltertelegrambot.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -19,6 +20,10 @@ public class Report {
      * Поле для хранения имени животного
      */
     private String name;
+    /**
+     * Дата создания отчета
+     */
+    private LocalDateTime date;
     /**
      * Поле для хранения информации о рационе животного
      */
@@ -77,7 +82,7 @@ public class Report {
     /**
      * Метод  изменения значения поля {@link Report#id}
      *
-     * @return возвращает id отчета
+     * @param id id отчета
      */
     public void setId(Long id) {
         this.id = id;
@@ -193,6 +198,24 @@ public class Report {
      */
     public void setPhotoOfAnimal(PhotoOfAnimal photoOfAnimal) {
         this.photoOfAnimal = photoOfAnimal;
+    }
+
+    /**
+     * Метод получения значения поля {@link Report#date}
+     *
+     * @return возвращает дату
+     */
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    /**
+     * Метод изменения значения поля {@link Report#date}
+     *
+     * @param date дата
+     */
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     /**

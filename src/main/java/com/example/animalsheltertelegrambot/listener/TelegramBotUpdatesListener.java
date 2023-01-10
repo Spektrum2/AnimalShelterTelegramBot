@@ -2,9 +2,12 @@ package com.example.animalsheltertelegrambot.listener;
 
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
+import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 
+import com.pengrad.telegrambot.model.Document;
+import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -68,15 +71,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final UserRepository userRepository;
 
+    private final PhotoOfAnimalService photoOfAnimalService;
+
     /**
      * Инжектим бота + репозиторий
      *
-     * @param telegramBot    бот
-     * @param userRepository репозиторий
+     * @param telegramBot          бот
+     * @param userRepository       репозиторий
+     * @param photoOfAnimalService обработка фотографии животного
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
+        this.photoOfAnimalService = photoOfAnimalService;
     }
 
     /**
@@ -98,10 +105,24 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 //            Обработка сообщений пользователя
+            long reportId;
             if (update.message() != null && "/start".equals(update.message().text())) {
-                mainMenu(update.message().chat().id());
-            } else if (update.message() != null && update.message().text().matches(parsePhone)) {
+                //mainMenu(update.message().chat().id());
+                testMenu(update.message().chat().id());
+            } else if (update.message() != null && "Узнать информацию о приюте".equals(update.message().text())) {
+                test2Menu(update.message().chat().id());
+            } else if (update.message() != null && "Назад".equals(update.message().text())) {
+                testMenu(update.message().chat().id());
+            } else if (update.message() != null && update.message().document() == null && update.message().photo() == null && update.message().text().matches(parsePhone)) {
                 parsing(update.message().text(), update.message().chat().id());
+            } else if (update.message().photo() != null) {
+                mailing(update.callbackQuery().message().chat().id(), "Пришлите имя животного" + "Например: Имя животного - Бобик");
+                PhotoSize[] photoSizes = update.message().photo();
+                reportId = photoOfAnimalService.uploadPhoto(photoSizes[2]);
+            } else if (update.message().document() != null) {
+                mailing(update.callbackQuery().message().chat().id(), "Пришлите имя животного" + "Например: Имя животного - Бобик");
+                Document document = update.message().document();
+                reportId = photoOfAnimalService.uploadPhoto(document);
             } else if (update.message() != null) {
                 mailing(update.message().chat().id(), "Моя твоя не понимать");
             }
@@ -118,6 +139,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                     "Например: +7-909-945-4367 Андрей");
                     case "5" ->
                             mailing(update.callbackQuery().message().chat().id(), "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+                    case "3" -> mailing(update.callbackQuery().message().chat().id(), "Пришлите фотографию");
                     default -> mailing(update.callbackQuery().message().chat().id(), data);
                 }
             }
@@ -131,7 +153,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param text сообщение пользователя содержащее номер телефона + имя
      * @param id   id чата
      */
-    private void parsing(String text, Long id) {
+    public void parsing(String text, Long id) {
         logger.info("Парсинг");
         Pattern pattern = Pattern.compile(parsePhone);
         Matcher matcher = pattern.matcher(text);
@@ -140,7 +162,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             String name = matcher.group(3);
             UserData userData = new UserData(id, name, phone);
             userRepository.save(userData);
-            mailing(id, "Контактные данные сохраненым!");
+            mailing(id, "Контактные данные сохранены!");
         }
     }
 
@@ -202,4 +224,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         inlineKeyboard.addRow(button5);
         mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", inlineKeyboard);
     }
+
+    private void testMenu(long chatId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                new String[]{"Узнать информацию о приюте", "Как взять собаку из приюта"},
+                new String[]{"Прислать отчет о питомце", "Позвать волонтера"});
+        telegramBot.execute(new SendMessage(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.").replyMarkup(replyKeyboardMarkup));
+    }
+
+    private void test2Menu(long chatId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                new String[]{"Рассказать о приюте", "Расписание работы приюта и адрес, схема проезда"},
+                new String[]{"Рекомендации о технике безопасности на территории приюта", "Принять и записать контактные данные для связи"},
+                new String[]{"Позвать волонтера", "Назад"});
+        telegramBot.execute(new SendMessage(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.").replyMarkup(replyKeyboardMarkup));
+    }
+
 }
