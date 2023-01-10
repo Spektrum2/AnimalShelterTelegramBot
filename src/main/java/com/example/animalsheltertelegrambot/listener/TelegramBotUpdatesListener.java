@@ -116,6 +116,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             } else if (update.message() != null && update.message().document() == null && update.message().photo() == null && update.message().text().matches(parsePhone)) {
                 parsing(update.message().text(), update.message().chat().id());
             } else if (update.message().photo() != null) {
+                mailing(update.callbackQuery().message().chat().id(), "Пришлите имя животного" + "Например: Имя животного - Бобик");
                 PhotoSize[] photoSizes = update.message().photo();
                 reportId = photoOfAnimalService.uploadPhoto(photoSizes[2]);
             } else if (update.message().document() != null) {
