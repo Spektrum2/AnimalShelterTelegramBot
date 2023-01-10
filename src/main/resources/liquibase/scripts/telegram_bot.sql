@@ -13,10 +13,11 @@ CREATE TABLE volunteer
 -- changeset dmitriy:2
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'animal'
+CREATE TYPE animal_type AS ENUM('DOG', 'CAT');
 CREATE TABLE animal
 (
     id           BIGSERIAL primary key,
-    animal_type  TEXT,
+    animal_type  animal_type,
     animal_name  TEXT,
     volunteer_id BIGINT REFERENCES volunteer (id)
 );

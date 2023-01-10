@@ -227,7 +227,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void mailing(long chatId, String receivedMessage, ReplyKeyboardMarkup replyKeyboardMarkup) {
         logger.info("Отправка сообщения");
-        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(replyKeyboardMarkup);
+        SendMessage message = new SendMessage(chatId, receivedMessage).replyMarkup(inlineKeyboard);
         SendResponse response = telegramBot.execute(message);
     }
 
