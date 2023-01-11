@@ -59,7 +59,6 @@ public class PhotoOfAnimalService {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(document.fileId()));
             byte[] data = telegramBot.getFileContent(getFileResponse.file());
             String filePath = getFileResponse.file().filePath();
-            //String mediaType = filePath.substring(filePath.lastIndexOf('.') + 1);
             String extension = filePath.substring(filePath.lastIndexOf('.'));
             PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), document.mimeType(), data);
             Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
