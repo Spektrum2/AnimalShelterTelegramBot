@@ -18,7 +18,8 @@ public class Animal {
     /**
      * Поле тип животного(кошка,собака)
      */
-    private String animalType;
+    @Enumerated(EnumType.STRING)
+    private AnimalType animalType;
     /**
      * Поле имя животного
      */
@@ -35,7 +36,7 @@ public class Animal {
      * @param animalName имя животного
      */
 
-    public Animal(String animalType, String animalName) {
+    public Animal(AnimalType animalType, String animalName) {
         this.animalType = animalType;
         this.animalName = animalName;
     }
@@ -71,7 +72,7 @@ public class Animal {
      *
      * @return возвращает тип животного
      */
-    public String getAnimalType() {
+    public AnimalType getAnimalType() {
         return animalType;
     }
 
@@ -80,7 +81,7 @@ public class Animal {
      *
      * @param animalType тип животного;
      */
-    public void setAnimalType(String animalType) {
+    public void setAnimalType(AnimalType animalType) {
         this.animalType = animalType;
     }
 
