@@ -1,6 +1,8 @@
 package com.example.animalsheltertelegrambot.listener;
 
+import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
+import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
@@ -11,9 +13,12 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +131,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Объявления сервиса для обработки фотографии животного
      */
     private final PhotoOfAnimalService photoOfAnimalService;
+    private final ReportRepository reportRepository;
 
     /**
      * Инжектим бота + репозиторий
@@ -134,10 +140,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param userRepository       репозиторий
      * @param photoOfAnimalService обработка фотографии животного
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
+                                      ReportRepository reportRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
         this.photoOfAnimalService = photoOfAnimalService;
+        this.reportRepository = reportRepository;
     }
 
     /**
@@ -308,7 +316,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод для меню консультации
      *
-     * @param chatId id чата
+     * @param chatId     id чата
      * @param animalType - переменая, которая определяет для какго вида животных(собака или кошка) будет запущено меню
      */
     private void infoAboutTheAnimalMenu(long chatId, int animalType) {
@@ -351,5 +359,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public Map<Long, Integer> getAllMapForTests() {
         return new HashMap<>(save);
+    }
+
+    @Scheduled(cron = "0 21 * * * *")
+    public void warning() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+        reportRepository.findAll().stream()
+                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) == 1 || ChronoUnit.DAYS.between(report.getDate(), now) == 2)
+                .map(Report::getUserData)
+                .forEach(user -> telegramBot.execute(new SendMessage(user.getIdChat(), "Сделайте отчет")));
+
+        reportRepository.findAll().stream()
+                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
+                .map(Report::getUserData)
+                .map(UserData::getAnimal)
+                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
     }
 }

@@ -210,4 +210,20 @@ public class VolunteerService {
         userData.setAnimal(optionalAnimal.get());
         return recordMapper.toRecord(userRepository.save(userData));
     }
+
+    /**
+     * Метод ищет пользователя по животному
+     *
+     * @param animalId - id животного
+     * @return возвращает пользователя
+     */
+    public UserRecord findUserByAnimal(long animalId) {
+        logger.info("Was invoked method for get user by animal");
+        Animal animal = animalRepository.findById(animalId)
+                .orElseThrow(() -> {
+                    logger.error("There is not animal with id = {}", animalId);
+                    return new AnimalNotFoundException(animalId);
+                });
+        return recordMapper.toRecord(userRepository.findByAnimal(animal));
+    }
 }

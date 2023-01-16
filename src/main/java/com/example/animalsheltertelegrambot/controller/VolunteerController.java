@@ -1,9 +1,6 @@
 package com.example.animalsheltertelegrambot.controller;
 
-import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
-import com.example.animalsheltertelegrambot.model.Report;
-import com.example.animalsheltertelegrambot.model.UserData;
-import com.example.animalsheltertelegrambot.model.Volunteer;
+import com.example.animalsheltertelegrambot.model.*;
 import com.example.animalsheltertelegrambot.record.AnimalRecord;
 import com.example.animalsheltertelegrambot.record.ReportRecord;
 import com.example.animalsheltertelegrambot.record.UserRecord;
@@ -174,7 +171,7 @@ public class VolunteerController {
                             description = "Привязка животного к волонтеру",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Volunteer.class)
+                                    schema = @Schema(implementation = Animal.class)
                             )
                     )
             }
@@ -249,5 +246,24 @@ public class VolunteerController {
                 .contentType(MediaType.parseMediaType(pair.getFirst()))
                 .contentLength(pair.getSecond().length)
                 .body(pair.getSecond());
+    }
+
+    @Operation(
+            summary = "Поиск пользователя по животному",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Поиск пользователя по животному",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/animal/{animalId}")
+    public UserRecord findUserByAnimal(@Parameter(description = "Введите id животного", example = "1")
+                                       @PathVariable Long animalId) {
+        return volunteerService.findUserByAnimal(animalId);
     }
 }

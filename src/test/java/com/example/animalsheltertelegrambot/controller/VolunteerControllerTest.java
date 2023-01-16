@@ -162,6 +162,14 @@ public class VolunteerControllerTest {
         assertThat(getRecordResponseEntity.getBody()).usingRecursiveComparison().isEqualTo(userRecord);
         assertThat(getRecordResponseEntity.getBody().getAnimal()).usingRecursiveComparison().isEqualTo(animalRecord);
 
+        ResponseEntity<UserRecord> getByAnimalRecordResponseEntity = testRestTemplate.getForEntity("http://localhost:" + port + "/volunteer/animal/" + animalRecord.getId(), UserRecord.class);
+
+        assertThat(getByAnimalRecordResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getByAnimalRecordResponseEntity.getBody()).isNotNull();
+        assertThat(getByAnimalRecordResponseEntity.getBody()).usingRecursiveComparison().isEqualTo(userRecord);
+        assertThat(getByAnimalRecordResponseEntity.getBody().getAnimal()).usingRecursiveComparison().isEqualTo(animalRecord);
+
+
     }
 
     @Test
