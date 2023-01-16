@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Сервис для обработки фотографии
@@ -118,6 +120,7 @@ public class PhotoOfAnimalService {
     public Report createReport(PhotoOfAnimal photoOfAnimal) {
         logger.info("Was invoked method for create report");
         Report report = new Report();
+        report.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         report.setPhotoOfAnimal(photoOfAnimal);
         return reportRepository.save(report);
     }
