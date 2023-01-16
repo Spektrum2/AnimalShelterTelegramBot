@@ -1,6 +1,14 @@
 package com.example.animalsheltertelegrambot.controller;
 
+import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
+import com.example.animalsheltertelegrambot.model.Report;
+import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.model.Volunteer;
+import com.example.animalsheltertelegrambot.record.AnimalRecord;
+import com.example.animalsheltertelegrambot.record.ReportRecord;
+import com.example.animalsheltertelegrambot.record.UserRecord;
+import com.example.animalsheltertelegrambot.record.VolunteerRecord;
+import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.example.animalsheltertelegrambot.service.VolunteerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,18 +16,23 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/volunteer")
 public class VolunteerController {
     private final VolunteerService volunteerService;
+    private final PhotoOfAnimalService photoOfAnimalService;
 
-    public VolunteerController(VolunteerService volunteerService) {
+    public VolunteerController(VolunteerService volunteerService, PhotoOfAnimalService photoOfAnimalService) {
         this.volunteerService = volunteerService;
+        this.photoOfAnimalService = photoOfAnimalService;
     }
 
     @Operation(
@@ -36,8 +49,26 @@ public class VolunteerController {
             }
     )
     @GetMapping
-    public Collection<Volunteer> getAllVolunteer() {
-        return volunteerService.getAllVolunteer();
+    public Collection<VolunteerRecord> getAllVolunteers() {
+        return volunteerService.getAllVolunteers();
+    }
+
+    @Operation(
+            summary = "Вывод всех пользователей",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Вывод всех пользователей",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    array = @ArraySchema(schema = @Schema(implementation = UserData.class))
+                            )
+                    )
+            }
+    )
+    @GetMapping("/user")
+    public Collection<UserRecord> getAllUsers() {
+        return volunteerService.getAllUsers();
     }
 
     @Operation(
@@ -54,9 +85,28 @@ public class VolunteerController {
             }
     )
     @GetMapping("{id}")
-    public Volunteer findVolunteer(@Parameter(description = "Введите id волонтера", example = "1")
-                                   @PathVariable Long id) {
+    public VolunteerRecord findVolunteer(@Parameter(description = "Введите id волонтера", example = "1")
+                                         @PathVariable Long id) {
         return volunteerService.findVolunteer(id);
+    }
+
+    @Operation(
+            summary = "Поиск пользователя по id",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Поиск пользователя по id",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/user/{id}")
+    public UserRecord findUser(@Parameter(description = "Введите id пользователя", example = "1")
+                               @PathVariable Long id) {
+        return volunteerService.findUser(id);
     }
 
     @Operation(
@@ -73,8 +123,8 @@ public class VolunteerController {
             }
     )
     @PostMapping
-    public Volunteer postVolunteer(@RequestBody Volunteer volunteer) {
-        return volunteerService.createVolunteer(volunteer);
+    public VolunteerRecord postVolunteer(@RequestBody @Valid VolunteerRecord volunteerRecord) {
+        return volunteerService.createVolunteer(volunteerRecord);
     }
 
     @Operation(
@@ -91,8 +141,8 @@ public class VolunteerController {
             }
     )
     @DeleteMapping("{id}")
-    public Volunteer deleteVolunteer(@Parameter(description = "Введите id волонтера", example = "1")
-                                     @PathVariable Long id) {
+    public VolunteerRecord deleteVolunteer(@Parameter(description = "Введите id волонтера", example = "1")
+                                           @PathVariable Long id) {
         return volunteerService.deleteVolunteer(id);
     }
 
@@ -110,10 +160,10 @@ public class VolunteerController {
             }
     )
     @PutMapping("{id}")
-    public Volunteer putUser(@Parameter(description = "Введите id волонтера", example = "1")
-                             @PathVariable Long id,
-                             @RequestBody Volunteer volunteer) {
-        return volunteerService.editVolunteer(id, volunteer);
+    public VolunteerRecord putVolunteer(@Parameter(description = "Введите id волонтера", example = "1")
+                                        @PathVariable Long id,
+                                        @RequestBody @Valid VolunteerRecord volunteerRecord) {
+        return volunteerService.editVolunteer(id, volunteerRecord);
     }
 
     @Operation(
@@ -130,10 +180,74 @@ public class VolunteerController {
             }
     )
     @PatchMapping("{id}/animal")
-    public Volunteer patchVolunteerAnimal(@Parameter(description = "Введите id волонтера", example = "1")
-                                          @PathVariable Long id,
-                                          @Parameter(description = "Введите id животного", example = "1")
-                                          @RequestParam("animalId") Long animalId) {
+    public AnimalRecord patchVolunteerAnimal(@Parameter(description = "Введите id волонтера", example = "1")
+                                             @PathVariable Long id,
+                                             @Parameter(description = "Введите id животного", example = "1")
+                                             @RequestParam("animalId") Long animalId) {
         return volunteerService.patchVolunteerAnimal(id, animalId);
+    }
+
+    @Operation(
+            summary = "Поиск всех отчетов пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Поиск всех отчетов пользователя",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    array = @ArraySchema(schema = @Schema(implementation = Report.class))
+                            )
+                    )
+            },
+            tags = "Report"
+    )
+    @GetMapping("{id}/reports")
+    public Collection<ReportRecord> findReportsByUser(@Parameter(description = "Введите id пользователя", example = "1")
+                                                      @PathVariable Long id) {
+        return volunteerService.findReportsByUser(id);
+    }
+
+    @Operation(
+            summary = "Привязка животного к пользователю",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Привязка животного к пользователю",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @PatchMapping("/user/{id}/animal")
+    public UserRecord patchUserAnimal(@Parameter(description = "Введите id пользователя", example = "1")
+                                      @PathVariable Long id,
+                                      @Parameter(description = "Введите id животного", example = "1")
+                                      @RequestParam("animalId") Long animalId) {
+        return volunteerService.patchUserAnimal(id, animalId);
+    }
+
+    @Operation(
+            summary = "Просмотр фотографии животного",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Просмотр фотографии животного",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = PhotoOfAnimal.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<byte[]> readAvatarFromDb(@Parameter(description = "Введите id фотографии", example = "1")
+                                                   @PathVariable long id) {
+        Pair<String, byte[]> pair = photoOfAnimalService.readAvatarFromDb(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(pair.getFirst()))
+                .contentLength(pair.getSecond().length)
+                .body(pair.getSecond());
     }
 }
