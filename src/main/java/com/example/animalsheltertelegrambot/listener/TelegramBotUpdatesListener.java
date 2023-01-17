@@ -22,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -364,13 +365,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @Scheduled(cron = "0 21 * * * *")
     public void warning() {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-
-        reportRepository.findAll().stream()
+        userRepository.findAll().stream()
+                .map(UserData::getReports).map(reports ->
+                        reports.stream()
+                                .reduce((first, second) -> second)
+                                .orElse(null))
+                .filter(Objects::nonNull)
                 .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) == 1 || ChronoUnit.DAYS.between(report.getDate(), now) == 2)
                 .map(Report::getUserData)
                 .forEach(user -> telegramBot.execute(new SendMessage(user.getIdChat(), "Сделайте отчет")));
 
-        reportRepository.findAll().stream()
+        userRepository.findAll().stream()
+                .map(UserData::getReports).map(reports ->
+                        reports.stream()
+                                .reduce((first, second) -> second)
+                                .orElse(null))
+                .filter(Objects::nonNull)
                 .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
                 .map(Report::getUserData)
                 .map(UserData::getAnimal)
