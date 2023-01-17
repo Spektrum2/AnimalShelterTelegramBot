@@ -30,6 +30,11 @@ public class UserData {
     private String phoneNumber;
 
     /**
+     * Поле идентификатор приюта
+     */
+    private Integer shelter;
+
+    /**
      * Поле для связи с таблицей Report
      */
     @OneToMany(mappedBy = "userData")
@@ -48,10 +53,11 @@ public class UserData {
      * @param name        login пользователя
      * @param phoneNumber контактные данные пользователя
      */
-    public UserData(Long idChat, String name, String phoneNumber) {
+    public UserData(Long idChat, String name, String phoneNumber, Integer shelter) {
         this.idChat = idChat;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.shelter = shelter;
     }
 
     /**
@@ -166,6 +172,14 @@ public class UserData {
      */
     public void setAnimal(Animal animal) {
         this.animal = animal;
+    }
+
+    public Integer getShelter() {
+        return shelter;
+    }
+
+    public void setShelter(Integer shelter) {
+        this.shelter = shelter;
     }
 
     /**

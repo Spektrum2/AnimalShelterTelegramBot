@@ -9,19 +9,23 @@ CREATE TABLE volunteer
     name      TEXT,
     last_name TEXT
 );
+--changeset aleksandr:2
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM pg_type WHERE typname = 'animal_type'
+CREATE TYPE animal_type AS ENUM('DOG', 'CAT');
 
--- changeset dmitriy:2
+-- changeset dmitriy:3
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'animal'
 CREATE TABLE animal
 (
     id           BIGSERIAL primary key,
-    animal_type  TEXT,
+    animal_type  animal_type,
     animal_name  TEXT,
     volunteer_id BIGINT REFERENCES volunteer (id)
 );
 
--- changeset mabelod:3
+-- changeset mabelod:4
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_data'
 CREATE TABLE user_data
@@ -30,10 +34,11 @@ CREATE TABLE user_data
     id_chat      BIGINT,
     name         TEXT,
     phone_number TEXT,
+    shelter      INT,
     animal_id    BIGINT REFERENCES animal (id)
 );
 
--- changeset aleksandr:4
+-- changeset aleksandr:5
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'photo_of_animal'
 CREATE TABLE photo_of_animal
@@ -45,7 +50,7 @@ CREATE TABLE photo_of_animal
     data       BYTEA
 );
 
--- changeset dmitriy:5
+-- changeset dmitriy:6
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
 -- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'report'
 CREATE TABLE report
