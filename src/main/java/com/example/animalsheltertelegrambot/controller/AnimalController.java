@@ -1,6 +1,7 @@
 package com.example.animalsheltertelegrambot.controller;
 
 import com.example.animalsheltertelegrambot.model.Animal;
+import com.example.animalsheltertelegrambot.record.AnimalRecord;
 import com.example.animalsheltertelegrambot.service.AnimalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
@@ -36,7 +38,7 @@ public class AnimalController {
             }
     )
     @GetMapping
-    public Collection<Animal> getAllUsers() {
+    public Collection<AnimalRecord> getAllUsers() {
         return animalService.getAllAnimal();
     }
 
@@ -54,7 +56,7 @@ public class AnimalController {
             }
     )
     @GetMapping("{id}")
-    public Animal findAnimal(@Parameter(description = "Введите id животного", example = "1")
+    public AnimalRecord findAnimal(@Parameter(description = "Введите id животного", example = "1")
                              @PathVariable Long id) {
         return animalService.findAnimal(id);
     }
@@ -73,8 +75,8 @@ public class AnimalController {
             }
     )
     @PostMapping
-    public Animal postAnimal(@RequestBody Animal animal) {
-        return animalService.createAnimal(animal);
+    public AnimalRecord postAnimal(@RequestBody @Valid AnimalRecord animalRecord) {
+        return animalService.createAnimal(animalRecord);
     }
 
     @Operation(
@@ -110,9 +112,9 @@ public class AnimalController {
             }
     )
     @PutMapping("{id}")
-    public Animal putUser(@Parameter(description = "Введите id животного", example = "1")
+    public AnimalRecord putUser(@Parameter(description = "Введите id животного", example = "1")
                           @PathVariable Long id,
-                          @RequestBody Animal animal) {
-        return animalService.editAnimal(id, animal);
+                          @RequestBody @Valid AnimalRecord animalRecord) {
+        return animalService.editAnimal(id, animalRecord);
     }
 }

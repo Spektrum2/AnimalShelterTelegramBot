@@ -9,10 +9,6 @@ CREATE TABLE volunteer
     name      TEXT,
     last_name TEXT
 );
---changeset aleksandr:2
--- preconditions onFail:MARK_RAN onError:MARK_RAN
--- precondition-sql-check expectedResult:0 SELECT count(*) FROM pg_type WHERE typname = 'animal_type'
-CREATE TYPE animal_type AS ENUM('DOG', 'CAT');
 
 -- changeset dmitriy:3
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
@@ -20,7 +16,7 @@ CREATE TYPE animal_type AS ENUM('DOG', 'CAT');
 CREATE TABLE animal
 (
     id           BIGSERIAL primary key,
-    animal_type  animal_type,
+    animal_type  VARCHAR(3),
     animal_name  TEXT,
     volunteer_id BIGINT REFERENCES volunteer (id)
 );
