@@ -398,7 +398,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .map(UserData::getAnimal)
                 .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getIdChat(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
 
-        userRepository.findByDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)).stream()
+        userRepository.findAll().stream()
+                .filter(user -> user.getDate().toLocalDate().equals(now.toLocalDate()))
                 .map(UserData::getAnimal)
                 .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getIdChat(), "У пользователя с животным id - " + animal.getId() + "закончился испытательный период")));
     }
