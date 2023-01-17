@@ -17,6 +17,10 @@ public class Volunteer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     /**
+     * Поля для id чата
+     */
+    private Long idChat;
+    /**
      * Поле имя волонтера
      */
     private String name;
@@ -115,6 +119,24 @@ public class Volunteer {
      */
     public void setAnimals(List<Animal> animals) {
         this.animals = animals;
+    }
+
+    /**
+     * Метод получения значения поля {@link Volunteer#idChat}
+     *
+     * @return возвращает id чата
+     */
+    public Long getIdChat() {
+        return idChat;
+    }
+
+    /**
+     * Метод изменения значения поля {@link Volunteer#idChat}
+     *
+     * @param idChat Возвращает id чата
+     */
+    public void setIdChat(Long idChat) {
+        this.idChat = idChat;
     }
 
     /**
