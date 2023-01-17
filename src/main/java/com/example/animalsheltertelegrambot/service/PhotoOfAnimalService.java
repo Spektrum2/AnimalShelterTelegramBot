@@ -50,13 +50,13 @@ public class PhotoOfAnimalService {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(photoSize.fileId()));
             byte[] data = telegramBot.getFileContent(getFileResponse.file());
             String filePath = getFileResponse.file().filePath();
-            String mediaType = filePath.substring(filePath.lastIndexOf('.') + 1);
             String extension = filePath.substring(filePath.lastIndexOf('.'));
-            PhotoOfAnimal photoOfAnimal = createPhoto(photoSize.fileSize(), mediaType, data);
+            PhotoOfAnimal photoOfAnimal = createPhoto(photoSize.fileSize(), data);
             Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
             Files.createDirectories(path.getParent());
             Files.deleteIfExists(path);
             Files.write(path, data);
+            photoOfAnimal.setMediaType(Files.probeContentType(path));
             photoOfAnimal.setFilePath(path.toString());
             return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
@@ -78,11 +78,12 @@ public class PhotoOfAnimalService {
             byte[] data = telegramBot.getFileContent(getFileResponse.file());
             String filePath = getFileResponse.file().filePath();
             String extension = filePath.substring(filePath.lastIndexOf('.'));
-            PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), document.mimeType(), data);
+            PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), data);
             Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
             Files.createDirectories(path.getParent());
             Files.deleteIfExists(path);
             Files.write(path, data);
+            photoOfAnimal.setMediaType(Files.probeContentType(path));
             photoOfAnimal.setFilePath(path.toString());
             return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
@@ -95,16 +96,14 @@ public class PhotoOfAnimalService {
      * Метод для создания фотографии
      *
      * @param size      размер фотографии
-     * @param mediaType тип фотографии
      * @param data      информация о файле
      * @return возвращает фотографию
      */
-    public PhotoOfAnimal createPhoto(long size, String mediaType, byte[] data) {
+    public PhotoOfAnimal createPhoto(long size, byte[] data) {
         logger.info("Was invoked method for create photo");
         PhotoOfAnimal photoOfAnimal = new PhotoOfAnimal();
         photoOfAnimal.setData(data);
         photoOfAnimal.setFileSize(size);
-        photoOfAnimal.setMediaType(mediaType);
         return photoRepository.save(photoOfAnimal);
     }
 

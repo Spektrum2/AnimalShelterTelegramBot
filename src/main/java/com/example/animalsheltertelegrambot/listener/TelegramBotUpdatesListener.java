@@ -7,6 +7,7 @@ import com.example.animalsheltertelegrambot.repository.UserRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -168,12 +169,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 //            Обработка сообщений пользователя
-            String text = update.message().text();
-            Long chatId = update.message().chat().id();
-            if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
-                parsing(text, chatId);
+        
+            if (update.message() != null && update.message().photo() == null && update.message().document() == null && update.message().text().matches(parsePhone)) {
+                parsing(update.message().text(), update.message().chat().id());
+            } else if (update.message() != null && update.message().photo() != null) {
+                PhotoSize[] photoSizes = update.message().photo();
+                photoOfAnimalService.uploadPhoto(photoSizes[2]);
+            } else if (update.message() != null && update.message().document() != null) {
+                photoOfAnimalService.uploadPhoto(update.message().document());
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
-                switch (text) {
+                Long chatId = update.message().chat().id();
+                switch (update.message().text()) {
                     case "/start", "Выход" -> mainMenu(chatId);
                     case "Приют для собак" -> {
                         animalType = 1;
