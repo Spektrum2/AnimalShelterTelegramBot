@@ -1,6 +1,6 @@
 package com.example.animalsheltertelegrambot.model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 /**
  * Класс для фотографии животного
