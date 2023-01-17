@@ -1,5 +1,6 @@
 package com.example.animalsheltertelegrambot.listener;
 
+import com.example.animalsheltertelegrambot.model.Constants;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
@@ -26,84 +27,13 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.example.animalsheltertelegrambot.model.Constants.*;
+
 /**
  * Класс для обработки сообщений
  */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
-    /**
-     * Обьявление перменной informationAboutTheShelter с описанием информации о приюте.
-     */
-    private final String informationAboutTheShelterDog = "В приюте животных из Астаны находится более 1700 бездомных собак, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
-            "Дворняги, метисы и породистые. У каждой собаки своя история и свой характер. Многие из них в какой-то момент оказались не нужной игрушкой - их предал хозяин. " +
-            "Наш бот создан для того чтобы собаки из приюта обрели свой  дом и получили второй шанс на жизнь. " +
-            "Так же мы привлекаем новых волонтеров для помощи приютским собакам.";
-
-    private final String informationAboutTheShelterCat = "В приюте животных из Астаны находится более 1700 бездомных котов, брошенных, потерянных и оказавшихся на улице при разных обстоятельствах. " +
-            "Сиамские, рыжие и лысые. У каждого кота своя история и свой характер. Многие из них в какой-то момент оказались не нужной игрушкой - их предал хозяин. " +
-            "Наш бот создан для того чтобы коты из приюта обрели свой  дом и получили второй шанс на жизнь. " +
-            "Так же мы привлекаем новых волонтеров для помощи приютским котам и кошкам.";
-    /**
-     * Обьявлние переменной workingHours с описанием работы приюта адреса.
-     */
-    private final String workingHoursDog = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
-            " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения)." +
-            "Адрес: Третья улица строителей, дом 15";
-
-    private final String workingHoursCat = "Приют животных из Астаны открыт для посещения 6 дней в неделю с 11:00 до 17:00 ч." +
-            " Санитарные дни 1-е и 15-е число месяца (на эти дни приют закрыт для посещения)." +
-            "Адрес: Шестой замоскворецкий переулок";
-
-    /**
-     * Обьявлние переменной securityMeasures с рекомендацией о технике безопасности на территории приюта.
-     */
-    private final String securityMeasures = "— Обувь должна быть на подошве, исключающей непроизвольное скольжение;" +
-            "— верхняя одежда должна соответствовать погоде, исключать промокание, а также должна быть облегающей и исключать возможность непроизвольных зацепов за ограждения, строения и иные конструкции." +
-            "Запрещается носить в карманах одежды колющие, режущие и стеклянные предметы." +
-            "Возможно использование дополнительных средств индивидуальной защиты. Средства индивидуальной защиты должны соответствовать размеру, применяться в исправном, чистом состоянии по назначению и храниться в специально отведенных и оборудованных местах с соблюдением санитарных правил." +
-            "При общении с животными работники и посетители приюта обязаны соблюдать меры персональной и общественной безопасности." +
-            "При входе в какое-либо помещение или вольер или выходе из него необходимо обязательно закрыть дверь.";
-    /**
-     * Контактные данные охраны для оформления пропуска на машину
-     */
-    private final String securityData = "Для получение пропуска на территорию приюта, пожалуйста, езжайте к центральному входу, по приезду наберите номер 5959";
-
-    /**
-     * Правила знакомства с животным
-     */
-    private final String rulesForGettingToKnowAnAnimal = "Веди себя хорошо, не балуйся";
-    /**
-     * Список документов, необходимых для того, чтобы взять животное из приюта
-     */
-    private final String listOfDocuments = "Паспорт";
-    /**
-     * Рекомендации по транспортировке животного
-     */
-    private final String animalTransportation = "Клетка для перевозки";
-    /**
-     * екомендации по обустройству дома щенка или котенка
-     */
-    private final String animalAdaptation = "Мыть, кормить, любить, не бить";
-    /**
-     * Рекомендации по обустройству дома взрослой собаки или кота/кошки
-     */
-    private final String adultAnimalAdaptation = "Мыть, кормить, любить, не бить, выводить гулять";
-    /**
-     * Рекомендаций по обустройству дома собаки или кота/кошки с ограниченными возможностями
-     */
-    private final String adaptationOfAnAnimalWithDisabilities = "Мыть, кормить, любить, не бить, выводить гулять";
-    /**
-     * Советы кинолога по первичному общению с собакой
-     */
-    private final String tipsFromADogHandler = "Не бить палкой";
-    /**
-     * Рекомендации по проверенным кинологам для дальнейшего обращения к собакой
-     */
-    private final String recommendationForDogHandlers = "Тетя Зина, Дядя Толя";
-    /**
-     * Список причин, почему могут отказать в просьбе забрать собаку или кота/кошку из приюта
-     */
-    private final String reasonForRefusal = "Плохой запах";
     /**
      * parsePhone - регулярное выражение для парсинга строки
      */
@@ -112,10 +42,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Хранение значения, для разделения приютов для собак и кошек
      */
     private final Map<Long, Integer> save = new HashMap<>();
-    /**
-     * Переменная для выбора меню для собаки или кошки
-     */
-    private Integer animalType = 0;
     /**
      * Объявление logger для логирования
      */
@@ -170,6 +96,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 //            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
+            Integer animalType = 0;
             if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
                 parsing(text, chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
@@ -188,45 +115,45 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case "Узнать информацию о приюте" -> infoMenu(chatId);
                     case "Рассказать о приюте" -> {
                         if (save.get(chatId) == 1) {
-                            mailing(chatId, informationAboutTheShelterDog);
+                            mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
                         } else if (save.get(chatId) == 2) {
-                            mailing(chatId, informationAboutTheShelterCat);
+                            mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
                         }
                     }
                     case "Расписание работы приюта и адрес, схема проезда" -> {
                         if (save.get(chatId) == 1) {
-                            mailing(chatId, workingHoursDog);
+                            mailing(chatId, WORKING_HOURS_DOG);
                         } else if (save.get(chatId) == 2) {
-                            mailing(chatId, workingHoursCat);
+                            mailing(chatId, WORKING_HOURS_CAT);
                         }
                     }
                     case "Рекомендации о технике безопасности на территории приюта" ->
-                            mailing(chatId, securityMeasures);
-                    case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, securityData);
+                            mailing(chatId, SECURITY_MEASURES);
+                    case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, SECURITY_DATA);
                     case "Позвать волонтера" ->
                             mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
                     case "Как взять животное из приюта" -> {
                         animalType = save.get(chatId);
                         infoAboutTheAnimalMenu(chatId, animalType);
                     }
-                    case "Правила знакомства с животным" -> mailing(chatId, rulesForGettingToKnowAnAnimal);
+                    case "Правила знакомства с животным" -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
                     case "Список документов, необходимых для того, чтобы взять животное из приюта" ->
-                            mailing(chatId, listOfDocuments);
-                    case "Рекомендации по транспортировке животного" -> mailing(chatId, animalTransportation);
+                            mailing(chatId, LIST_OF_DOCUMENTS);
+                    case "Рекомендации по транспортировке животного" -> mailing(chatId, ANIMAL_TRANSPORTATION);
                     case "Рекомендации по обустройству дома щенка", "Рекомендации по обустройству дома котенка" ->
-                            mailing(chatId, animalAdaptation);
+                            mailing(chatId, ANIMAL_ADAPTATION);
                     case "Рекомендации по обустройству дома взрослой собаки", "Рекомендации по обустройству дома взрослого кота/кошки" ->
-                            mailing(chatId, adultAnimalAdaptation);
-                    case "Советы кинолога по первичному общению с собакой" -> mailing(chatId, tipsFromADogHandler);
+                            mailing(chatId, ADULT_ANIMAL_ADAPTATION);
+                    case "Советы кинолога по первичному общению с собакой" -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
                     case "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой" ->
-                            mailing(chatId, recommendationForDogHandlers);
+                            mailing(chatId, RECOMMENDATION_FOR_DOG_HANDLERS);
                     case "Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта" ->
-                            mailing(chatId, reasonForRefusal);
+                            mailing(chatId, REASON_FOR_REFUSAL);
                     case "Записать контактные данные для связи" ->
                             mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
                                     "Например: +7-909-945-4367 Андрей");
                     case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
-                            mailing(chatId, adaptationOfAnAnimalWithDisabilities);
+                            mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
                     case "Назад" -> shelterMenu(chatId);
                     default -> mailing(chatId, "Моя твоя не понимать");
                 }
