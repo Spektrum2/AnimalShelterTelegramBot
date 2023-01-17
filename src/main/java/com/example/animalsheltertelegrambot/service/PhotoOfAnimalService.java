@@ -2,7 +2,6 @@ package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.exception.PhotoNotFoundException;
 import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
-import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.pengrad.telegrambot.TelegramBot;
@@ -20,8 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 /**
  * Сервис для обработки фотографии
@@ -45,9 +42,9 @@ public class PhotoOfAnimalService {
      * Метод для загрузки фотографии из телеграм(с сжатием) в БД
      *
      * @param photoSize фотография
-     * @return возвращает id отчета
+     * @return возвращает фография
      */
-    public long uploadPhoto(PhotoSize photoSize) {
+    public PhotoOfAnimal uploadPhoto(PhotoSize photoSize) {
         logger.info("Was invoked method for upload photo from photoSize");
         try {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(photoSize.fileId()));
@@ -61,10 +58,10 @@ public class PhotoOfAnimalService {
             Files.deleteIfExists(path);
             Files.write(path, data);
             photoOfAnimal.setFilePath(path.toString());
-            return createReport(photoRepository.save(photoOfAnimal)).getId();
+            return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -72,9 +69,9 @@ public class PhotoOfAnimalService {
      * Метод для загрузки фотографии из телеграм(полный размер) в БД
      *
      * @param document фотография
-     * @return возвращает id отчета
+     * @return возвращает фотографию
      */
-    public long uploadPhoto(Document document) {
+    public PhotoOfAnimal uploadPhoto(Document document) {
         logger.info("Was invoked method for upload photo from document");
         try {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(document.fileId()));
@@ -87,10 +84,10 @@ public class PhotoOfAnimalService {
             Files.deleteIfExists(path);
             Files.write(path, data);
             photoOfAnimal.setFilePath(path.toString());
-            return createReport(photoRepository.save(photoOfAnimal)).getId();
+            return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -109,20 +106,6 @@ public class PhotoOfAnimalService {
         photoOfAnimal.setFileSize(size);
         photoOfAnimal.setMediaType(mediaType);
         return photoRepository.save(photoOfAnimal);
-    }
-
-    /**
-     * Метод для создания отчета
-     *
-     * @param photoOfAnimal фотография
-     * @return возвращает отчет
-     */
-    public Report createReport(PhotoOfAnimal photoOfAnimal) {
-        logger.info("Was invoked method for create report");
-        Report report = new Report();
-        report.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        report.setPhotoOfAnimal(photoOfAnimal);
-        return reportRepository.save(report);
     }
 
     /**
