@@ -1,7 +1,5 @@
 package com.example.animalsheltertelegrambot.listener;
 
-import com.example.animalsheltertelegrambot.model.Constants;
-import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
@@ -110,18 +108,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             Integer animalType = 0;
             if (update.message() != null && photo == null && document == null && text.matches(parsePhone)) {
                 parsing(text, chatId);
-            } else if (update.message() != null && savePhotoSize.get(chatId) != null && saveDocument.get(chatId) != null && text.matches(parseText)) {
+                // если нет фото и документа но есть сообщение
+            } else if (update.message() != null && photo == null && document == null && text.matches(parseText)
+                    && (saveDocument.get(chatId) == null && savePhotoSize.get(chatId) == null)) {
                 saveText.put(chatId, text);
                 mailing(chatId, "Пожалуйста, загрузите фотографию");
-            } else if (update.message() != null && (photo != null || document != null) && saveText.get(chatId) != null) {
-                if (document != null) {
-                    saveDocument.put(chatId, document);
-                    parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
-                } else if (photo[1] != null) {
-                    savePhotoSize.put(chatId, photo[1]);
-                    parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
-                }
-            } else if (update.message() != null && (photo != null || document != null) && saveText.get(chatId) == null) {
+                // если есть фото или документ, и нет сообщения
+            } else if (update.message() != null && (photo != null || document != null) && text == null && saveText.get(chatId) == null) {
                 if (document != null) {
                     saveDocument.put(chatId, document);
                     mailing(chatId, "Пожалуйста, введите текст отчета");
@@ -129,12 +122,24 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     savePhotoSize.put(chatId, photo[1]);
                     mailing(chatId, "Пожалуйста, введите текст отчета");
                 }
-            } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && text.matches(parseText)) {
+            } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && text != null && text.matches(parseText)
+            && document == null && photo == null) {
                 saveText.put(chatId, text);
-                parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
-            } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && saveText.get(chatId) != null) {
-                parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
-            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
+                parsing(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+            } else if (update.message() != null && photo == null && document == null && text != null && text.matches(parseText) &&
+                    (saveDocument.get(chatId) != null || savePhotoSize.get(chatId) != null)) {
+                saveText.put(chatId, text);
+                parsing(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+            } else if (update.message() != null && (photo != null || document != null) && text == null && saveText.get(chatId) != null &&
+                    saveDocument.get(chatId) == null && savePhotoSize.get(chatId) == null) {
+                if (document != null) {
+                    saveDocument.put(chatId, document);
+                    parsing(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+                } else if (photo[1] != null) {
+                    savePhotoSize.put(chatId, photo[1]);
+                    parsing(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+                }
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text != null) {
                 switch (text) {
                     case "/start", "Выход" -> mainMenu(chatId);
                     case "Приют для собак" -> {
@@ -219,7 +224,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             }
     }
 
-    public void parsingAndSavePhoto(String text, PhotoSize photoSize, Document document, Long id) {
+    public void parsing(String text, PhotoSize photoSize, Document document, Long id) {
         logger.info("Запуск метода занесения данных для отчета");
         Pattern pattern = Pattern.compile(parseText);
         Matcher matcher = pattern.matcher(text);
@@ -246,31 +251,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             saveText.put(id, null);
             saveDocument.put(id, null);
             savePhotoSize.put(id, null);
-        }
-    }
-
-    public void savePhotoBd(Long id, PhotoSize[] photo, Document document) {
-        if (photo == null && document != null) {
-            UserData userData = new UserData();
-            for (int i = 0; i < userRepository.findAll().size(); i++) {
-                if (userRepository.findAll().get(i).getIdChat().equals(id))
-                {userData = userRepository.findAll().get(i);}
-            }
-            List<Report> reports = new ArrayList<>();
-            Report report = new Report();
-            for (int i = 0; i < reportRepository.findAll().size(); i++) {
-                if (reportRepository.findAll().get(i).equals(userData.getId())) {
-                    reports.add(reportRepository.findAll().get(i));
-                }
-            }
-            for (int i = 0; i < reports.size(); i++) {
-                if (reports.get(i).getDate().equals(LocalDateTime.now())) {
-                    report = reports.get(i);
-                }
-            }
-            report.setPhotoOfAnimal(photoOfAnimalService.uploadPhoto(document));
-        } else if (document == null && photo != null) {
-            photoOfAnimalService.uploadPhoto(photo[1]);
         }
     }
 
