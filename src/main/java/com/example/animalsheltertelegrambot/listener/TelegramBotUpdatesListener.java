@@ -3,11 +3,14 @@ package com.example.animalsheltertelegrambot.listener;
 import com.example.animalsheltertelegrambot.model.Constants;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
+import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Document;
+import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -58,8 +61,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Объявления сервиса для обработки фотографии животного
      */
-    private final PhotoOfAnimalService photoOfAnimalService;
+    private final PhotoRepository photoRepository;
     private final ReportRepository reportRepository;
+    private final PhotoOfAnimalService photoOfAnimalService;
 
     /**
      * Инжектим бота + репозиторий
@@ -69,11 +73,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param photoOfAnimalService обработка фотографии животного
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
-                                      ReportRepository reportRepository) {
+                                      ReportRepository reportRepository,
+                                      PhotoRepository photoRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
-        this.photoOfAnimalService = photoOfAnimalService;
         this.reportRepository = reportRepository;
+        this.photoRepository = photoRepository;
+        this.photoOfAnimalService = photoOfAnimalService;
     }
 
     /**
@@ -103,6 +109,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 parsing(text, chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseText)) {
                 parsing(text, chatId);
+            } else if (update.message() != null && update.message().photo() != null || update.message().document() != null) {
+                savePhotoBd(chatId, update.message().photo(), update.message().document());
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
                     case "/start", "Выход" -> mainMenu(chatId);
@@ -196,6 +204,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 reportRepository.save(report);
                 mailing(id, "Контактные данные сохранены!");
             }
+        }
+    }
+
+    public void savePhotoBd(Long id, PhotoSize[] photo, Document document) {
+        if (photo == null) {
+            photoOfAnimalService.uploadPhoto(document);
+        } else if (document == null) {
+            photoOfAnimalService.uploadPhoto(photo[1]);
         }
     }
 
