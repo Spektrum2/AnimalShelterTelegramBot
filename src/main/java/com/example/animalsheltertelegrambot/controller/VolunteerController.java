@@ -307,4 +307,13 @@ public class VolunteerController {
         return volunteerService.getAllUserShelterDogOrShelterCat(number);
     }
 
+
+    @PatchMapping("/user/{id}/decision/")
+    public UserRecord sendMessageToUser(@Parameter(description = "Введите id животного", example = "1")
+                                      @PathVariable Long id,
+                                      @Parameter(description = "Введите 1 - отчет заполняется плохо. Введите 2  - вы прошли испытательный срок. Введите 3 - вы не прошли испытательный срок", example = "1")
+                                      @RequestParam("number") Integer number) {
+        return volunteerService.sendMessageToUser(id,number);
+    }
+
 }

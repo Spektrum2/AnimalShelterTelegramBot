@@ -236,7 +236,7 @@ public class VolunteerService {
     /**
      * Метод для продления испытательного срока
      *
-     * @param id id пользователя
+     * @param id     id пользователя
      * @param number номер для выбора количества дней продления(14 или 30)
      * @return возвращает пользователя
      */
@@ -258,8 +258,7 @@ public class VolunteerService {
         } else if (number == 2) {
             user.setDate(localDateTime.plusMonths(1));
             telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 30 дней");
-        }
-        else {
+        } else {
             throw new NumberNotFoundException();
         }
         return recordMapper.toRecord(userRepository.save(user));
@@ -284,7 +283,42 @@ public class VolunteerService {
                     .filter(user -> user.getShelter() == 2)
                     .collect(Collectors.toList());
         } else {
-           throw new NumberNotFoundException();
+            throw new NumberNotFoundException();
         }
     }
+
+    /**
+     * Метод для отправки сообщений пользователю
+     *
+     * @param id     id пользователя
+     * @param number номер для описания результата выбранных случаев
+     * @return возвращает пользователя
+     */
+
+    public UserRecord sendMessageToUser(Long id, int number) {
+        logger.info("Was invoked method for sending messages to user if he passed the probation period or not");
+        UserData user = userRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("There is not user with id = {}", id);
+                    return new UserNotFoundException(id);
+                });
+        if (number == 1) {
+            user.getIdChat();
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "«Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо. " +
+                    "Пожалуйста, подойди ответственнее к этому занятию. " +
+                    "В противном случае волонтеры приюта будут обязаны самолично проверять условия содержания животного».");
+        } else if (number == 2) {
+            user.getIdChat();
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вы прошли испытательный срок.");
+        } else if (number == 3) {
+            user.getIdChat();
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вы не прошли испытательный срок.");
+        } else {
+            throw new NumberNotFoundException();
+        }
+        return recordMapper.toRecord(userRepository.save(user));
+
+    }
 }
+
+
