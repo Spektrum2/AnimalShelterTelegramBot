@@ -13,6 +13,7 @@ public class RecordMapper {
         userRecord.setName(userData.getName());
         userRecord.setPhoneNumber(userData.getPhoneNumber());
         userRecord.setShelter(userData.getShelter());
+        userRecord.setDate(userData.getDate());
         if (userData.getAnimal() != null) {
             userRecord.setAnimal(toRecord(userData.getAnimal()));
         }
@@ -33,6 +34,7 @@ public class RecordMapper {
     public VolunteerRecord toRecord(Volunteer volunteer) {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
         volunteerRecord.setId(volunteer.getId());
+        volunteerRecord.setIdChat(volunteer.getIdChat());
         volunteerRecord.setName(volunteer.getName());
         volunteerRecord.setLastName(volunteer.getLastName());
         return volunteerRecord;
@@ -65,6 +67,7 @@ public class RecordMapper {
 
     public Volunteer toEntity(VolunteerRecord volunteerRecord) {
         Volunteer volunteer = new Volunteer();
+        volunteer.setIdChat(volunteerRecord.getIdChat());
         volunteer.setName(volunteerRecord.getName());
         volunteer.setLastName(volunteerRecord.getLastName());
         return volunteer;
@@ -88,6 +91,7 @@ public class RecordMapper {
         userData.setName(userRecord.getName());
         userData.setPhoneNumber(userRecord.getPhoneNumber());
         userData.setShelter(userRecord.getShelter());
+        userData.setDate(userRecord.getDate());
         if (userRecord.getAnimal() != null) {
             Animal animal = toEntity(userRecord.getAnimal());
             animal.setId(userRecord.getAnimal().getId());

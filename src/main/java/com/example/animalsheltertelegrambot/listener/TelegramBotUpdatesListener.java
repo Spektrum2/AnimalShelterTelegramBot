@@ -289,11 +289,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return new HashMap<>(save);
     }
 
+    /**
+     * Метод для атоматического послания сообщений
+     *
+     */
     @Scheduled(cron = "0 21 * * * *")
     public void warning() {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         userRepository.findAll().stream()
-                .map(UserData::getReports).map(reports ->
+                .map(UserData::getReports)
+                .map(reports ->
                         reports.stream()
                                 .reduce((first, second) -> second)
                                 .orElse(null))
@@ -303,7 +308,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .forEach(user -> telegramBot.execute(new SendMessage(user.getIdChat(), "Сделайте отчет")));
 
         userRepository.findAll().stream()
-                .map(UserData::getReports).map(reports ->
+                .map(UserData::getReports)
+                .map(reports ->
                         reports.stream()
                                 .reduce((first, second) -> second)
                                 .orElse(null))
@@ -311,6 +317,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
                 .map(Report::getUserData)
                 .map(UserData::getAnimal)
-                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
+                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getIdChat(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
+
+        userRepository.findAll().stream()
+                .filter(user -> user.getDate().toLocalDate().equals(now.toLocalDate()))
+                .map(UserData::getAnimal)
+                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getIdChat(), "У пользователя с животным id - " + animal.getId() + "закончился испытательный период")));
     }
 }

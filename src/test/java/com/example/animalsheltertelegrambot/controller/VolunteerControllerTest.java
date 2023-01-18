@@ -237,6 +237,7 @@ public class VolunteerControllerTest {
         userRecord.setName(faker.name().firstName());
         userRecord.setPhoneNumber(faker.phoneNumber().phoneNumber());
         userRecord.setShelter(faker.random().nextInt(1, 2));
+        userRecord.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         if (animalRecord != null) {
             userRecord.setAnimal(animalRecord);
         }
@@ -261,6 +262,7 @@ public class VolunteerControllerTest {
 
     private VolunteerRecord generateVolunteer() {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
+        volunteerRecord.setIdChat(faker.number().randomNumber());
         volunteerRecord.setName(faker.name().firstName());
         volunteerRecord.setLastName(faker.name().lastName());
         return volunteerRecord;

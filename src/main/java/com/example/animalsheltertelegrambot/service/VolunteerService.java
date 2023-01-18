@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -207,6 +209,7 @@ public class VolunteerService {
             throw new AnimalNotFoundException(animalId);
         }
         UserData userData = optionalUser.get();
+        userData.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).plusMonths(1));
         userData.setAnimal(optionalAnimal.get());
         return recordMapper.toRecord(userRepository.save(userData));
     }
@@ -225,5 +228,28 @@ public class VolunteerService {
                     return new AnimalNotFoundException(animalId);
                 });
         return recordMapper.toRecord(userRepository.findByAnimal(animal));
+    }
+
+    /**
+     * Метод для продления испытательного срока
+     *
+     * @param id id пользователя
+     * @param number номер для выбора количества дней продления(14 или 30)
+     * @return возвращает пользователя
+     */
+    public UserRecord extensionPeriod(long id, int number) {
+        logger.info("Was invoked method for extension of the probation period");
+        UserData user = userRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("There is not user with id = {}", id);
+                    return new UserNotFoundException(id);
+                });
+        LocalDateTime localDateTime = user.getDate();
+        if (number == 1) {
+            user.setDate(localDateTime.plusWeeks(2));
+        } else if (number == 2) {
+            user.setDate(localDateTime.plusMonths(1));
+        }
+        return recordMapper.toRecord(userRepository.save(user));
     }
 }
