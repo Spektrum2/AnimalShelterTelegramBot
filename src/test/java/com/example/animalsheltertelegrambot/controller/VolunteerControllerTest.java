@@ -215,6 +215,7 @@ public class VolunteerControllerTest {
         AnimalRecord animalRecord = addAnimal(generateAnimal(volunteerRecord));
         UserRecord userRecord = generateUser(animalRecord);
         UserRecord userRecord1 = userRecord;
+        userRecord1.setDate(userRecord1.getDate().plusMonths(1));
         userRecord1.setAnimal(animalRecord);
 
         ResponseEntity<UserRecord> recordResponseEntity = testRestTemplate.exchange(
@@ -270,7 +271,6 @@ public class VolunteerControllerTest {
 
     private ReportRecord generateReport(UserRecord userRecord) {
         ReportRecord reportRecord = new ReportRecord();
-        reportRecord.setName(faker.animal().name());
         reportRecord.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         reportRecord.setDiet(faker.book().title());
         reportRecord.setHealth(faker.book().title());

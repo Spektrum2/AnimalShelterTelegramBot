@@ -1,6 +1,5 @@
 package com.example.animalsheltertelegrambot.listener;
 
-import com.example.animalsheltertelegrambot.model.Constants;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
@@ -23,7 +22,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

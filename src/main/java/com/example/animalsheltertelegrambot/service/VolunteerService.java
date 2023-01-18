@@ -2,6 +2,7 @@ package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.component.RecordMapper;
 import com.example.animalsheltertelegrambot.exception.AnimalNotFoundException;
+import com.example.animalsheltertelegrambot.exception.NumberNotFoundException;
 import com.example.animalsheltertelegrambot.exception.UserNotFoundException;
 import com.example.animalsheltertelegrambot.exception.VolunteerNotFoundException;
 import com.example.animalsheltertelegrambot.model.Animal;
@@ -20,7 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -249,7 +252,32 @@ public class VolunteerService {
             user.setDate(localDateTime.plusWeeks(2));
         } else if (number == 2) {
             user.setDate(localDateTime.plusMonths(1));
+        }else {
+            throw new NumberNotFoundException();
         }
         return recordMapper.toRecord(userRepository.save(user));
+    }
+
+    /**
+     * Метод ищет пользователей по обращению в приют(собак или кошек)
+     *
+     * @param number номер для выбора вывода информации(приют кошек или приют собак)
+     * @return возвращает список пользователей
+     */
+    public Collection<UserRecord> getAllUserShelterDogOrShelterCat(int number) {
+        List<UserRecord> users = new ArrayList<>();
+        if (number == 1) {
+            return userRepository.findAll().stream()
+                    .map(recordMapper::toRecord)
+                    .filter(user -> user.getShelter() == 1)
+                    .collect(Collectors.toList());
+        } else if (number == 2) {
+            return userRepository.findAll().stream()
+                    .map(recordMapper::toRecord)
+                    .filter(user -> user.getShelter() == 2)
+                    .collect(Collectors.toList());
+        } else {
+           throw new NumberNotFoundException();
+        }
     }
 }
