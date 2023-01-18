@@ -1,11 +1,14 @@
 package com.example.animalsheltertelegrambot.record;
 
+import java.time.LocalDateTime;
+
 public class UserRecord {
     private Long id;
     private Long idChat;
     private String name;
     private String phoneNumber;
     private Integer shelter;
+    private LocalDateTime date;
     private AnimalRecord animal;
 
     public Long getId() {
@@ -54,5 +57,13 @@ public class UserRecord {
 
     public void setAnimal(AnimalRecord animal) {
         this.animal = animal;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 }

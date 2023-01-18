@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public class ReportRecord {
     private Long id;
-    private String name;
     private LocalDateTime date;
     private String diet;
     private String health;
@@ -18,14 +17,6 @@ public class ReportRecord {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public LocalDateTime getDate() {

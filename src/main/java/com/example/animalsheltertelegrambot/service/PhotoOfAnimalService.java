@@ -2,7 +2,6 @@ package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.exception.PhotoNotFoundException;
 import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
-import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.pengrad.telegrambot.TelegramBot;
@@ -20,8 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 /**
  * Сервис для обработки фотографии
@@ -45,26 +42,26 @@ public class PhotoOfAnimalService {
      * Метод для загрузки фотографии из телеграм(с сжатием) в БД
      *
      * @param photoSize фотография
-     * @return возвращает id отчета
+     * @return возвращает фография
      */
-    public long uploadPhoto(PhotoSize photoSize) {
+    public PhotoOfAnimal uploadPhoto(PhotoSize photoSize) {
         logger.info("Was invoked method for upload photo from photoSize");
         try {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(photoSize.fileId()));
             byte[] data = telegramBot.getFileContent(getFileResponse.file());
             String filePath = getFileResponse.file().filePath();
-            String mediaType = filePath.substring(filePath.lastIndexOf('.') + 1);
             String extension = filePath.substring(filePath.lastIndexOf('.'));
-            PhotoOfAnimal photoOfAnimal = createPhoto(photoSize.fileSize(), mediaType, data);
+            PhotoOfAnimal photoOfAnimal = createPhoto(photoSize.fileSize(), data);
             Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
             Files.createDirectories(path.getParent());
             Files.deleteIfExists(path);
             Files.write(path, data);
+            photoOfAnimal.setMediaType(Files.probeContentType(path));
             photoOfAnimal.setFilePath(path.toString());
-            return createReport(photoRepository.save(photoOfAnimal)).getId();
+            return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -72,25 +69,26 @@ public class PhotoOfAnimalService {
      * Метод для загрузки фотографии из телеграм(полный размер) в БД
      *
      * @param document фотография
-     * @return возвращает id отчета
+     * @return возвращает фотографию
      */
-    public long uploadPhoto(Document document) {
+    public PhotoOfAnimal uploadPhoto(Document document) {
         logger.info("Was invoked method for upload photo from document");
         try {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(document.fileId()));
             byte[] data = telegramBot.getFileContent(getFileResponse.file());
             String filePath = getFileResponse.file().filePath();
             String extension = filePath.substring(filePath.lastIndexOf('.'));
-            PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), document.mimeType(), data);
+            PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), data);
             Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
             Files.createDirectories(path.getParent());
             Files.deleteIfExists(path);
             Files.write(path, data);
+            photoOfAnimal.setMediaType(Files.probeContentType(path));
             photoOfAnimal.setFilePath(path.toString());
-            return createReport(photoRepository.save(photoOfAnimal)).getId();
+            return photoRepository.save(photoOfAnimal);
         } catch (IOException e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -98,31 +96,15 @@ public class PhotoOfAnimalService {
      * Метод для создания фотографии
      *
      * @param size      размер фотографии
-     * @param mediaType тип фотографии
      * @param data      информация о файле
      * @return возвращает фотографию
      */
-    public PhotoOfAnimal createPhoto(long size, String mediaType, byte[] data) {
+    public PhotoOfAnimal createPhoto(long size, byte[] data) {
         logger.info("Was invoked method for create photo");
         PhotoOfAnimal photoOfAnimal = new PhotoOfAnimal();
         photoOfAnimal.setData(data);
         photoOfAnimal.setFileSize(size);
-        photoOfAnimal.setMediaType(mediaType);
         return photoRepository.save(photoOfAnimal);
-    }
-
-    /**
-     * Метод для создания отчета
-     *
-     * @param photoOfAnimal фотография
-     * @return возвращает отчет
-     */
-    public Report createReport(PhotoOfAnimal photoOfAnimal) {
-        logger.info("Was invoked method for create report");
-        Report report = new Report();
-        report.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        report.setPhotoOfAnimal(photoOfAnimal);
-        return reportRepository.save(report);
     }
 
     /**

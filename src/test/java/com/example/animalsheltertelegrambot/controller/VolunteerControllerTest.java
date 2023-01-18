@@ -215,6 +215,7 @@ public class VolunteerControllerTest {
         AnimalRecord animalRecord = addAnimal(generateAnimal(volunteerRecord));
         UserRecord userRecord = generateUser(animalRecord);
         UserRecord userRecord1 = userRecord;
+        userRecord1.setDate(userRecord1.getDate().plusMonths(1));
         userRecord1.setAnimal(animalRecord);
 
         ResponseEntity<UserRecord> recordResponseEntity = testRestTemplate.exchange(
@@ -237,6 +238,7 @@ public class VolunteerControllerTest {
         userRecord.setName(faker.name().firstName());
         userRecord.setPhoneNumber(faker.phoneNumber().phoneNumber());
         userRecord.setShelter(faker.random().nextInt(1, 2));
+        userRecord.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         if (animalRecord != null) {
             userRecord.setAnimal(animalRecord);
         }
@@ -261,6 +263,7 @@ public class VolunteerControllerTest {
 
     private VolunteerRecord generateVolunteer() {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
+        volunteerRecord.setIdChat(faker.number().randomNumber());
         volunteerRecord.setName(faker.name().firstName());
         volunteerRecord.setLastName(faker.name().lastName());
         return volunteerRecord;
@@ -268,7 +271,6 @@ public class VolunteerControllerTest {
 
     private ReportRecord generateReport(UserRecord userRecord) {
         ReportRecord reportRecord = new ReportRecord();
-        reportRecord.setName(faker.animal().name());
         reportRecord.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         reportRecord.setDiet(faker.book().title());
         reportRecord.setHealth(faker.book().title());

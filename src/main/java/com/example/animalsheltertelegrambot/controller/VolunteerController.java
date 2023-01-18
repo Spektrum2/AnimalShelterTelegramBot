@@ -266,4 +266,45 @@ public class VolunteerController {
                                        @PathVariable Long animalId) {
         return volunteerService.findUserByAnimal(animalId);
     }
+
+    @Operation(
+            summary = "Увеличение испытательного срока пользователю",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Увеличение испытательного срока пользователю",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @PatchMapping("/user/{id}/period/")
+    public UserRecord extensionPeriod(@Parameter(description = "Введите id животного", example = "1")
+                                      @PathVariable Long id,
+                                      @Parameter(description = "Введите 1 - увеличить испытательный срок на 14 дней. Введите 2  - увеличить испытательный срок на 30 дней", example = "1")
+                                      @RequestParam("number") Integer number) {
+        return volunteerService.extensionPeriod(id, number);
+    }
+
+    @Operation(
+            summary = "Поиск пользователей по приюту(приют собак или приют кошек)",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Поиск пользователей по приюту(приют собак или приют кошек)",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/user/shelter")
+    public Collection<UserRecord> getAllUserShelterDogOrShelterCat(@Parameter(description = "Введите 1 - показать пользователей, которые обратились в приют собак. Введите 2  -  показать пользователей, которые обратились в приют кошек", example = "1")
+                                                                   @RequestParam("number") Integer number) {
+        return volunteerService.getAllUserShelterDogOrShelterCat(number);
+    }
+
 }

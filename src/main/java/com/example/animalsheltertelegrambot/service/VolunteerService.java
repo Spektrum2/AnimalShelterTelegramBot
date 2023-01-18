@@ -1,9 +1,8 @@
 package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.component.RecordMapper;
-import com.example.animalsheltertelegrambot.exception.AnimalNotFoundException;
-import com.example.animalsheltertelegrambot.exception.UserNotFoundException;
-import com.example.animalsheltertelegrambot.exception.VolunteerNotFoundException;
+import com.example.animalsheltertelegrambot.exception.*;
+import com.example.animalsheltertelegrambot.listener.TelegramBotUpdatesListener;
 import com.example.animalsheltertelegrambot.model.Animal;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.model.Volunteer;
@@ -18,7 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,15 +32,17 @@ public class VolunteerService {
     private final UserRepository userRepository;
     private final AnimalRepository animalRepository;
     private final RecordMapper recordMapper;
+    private final TelegramBotUpdatesListener telegramBotUpdatesListener;
 
     public VolunteerService(VolunteerRepository volunteerRepository,
                             UserRepository userRepository,
                             AnimalRepository animalRepository,
-                            RecordMapper recordMapper) {
+                            RecordMapper recordMapper, TelegramBotUpdatesListener telegramBotUpdatesListener) {
         this.volunteerRepository = volunteerRepository;
         this.userRepository = userRepository;
         this.animalRepository = animalRepository;
         this.recordMapper = recordMapper;
+        this.telegramBotUpdatesListener = telegramBotUpdatesListener;
     }
 
     /**
@@ -207,6 +212,7 @@ public class VolunteerService {
             throw new AnimalNotFoundException(animalId);
         }
         UserData userData = optionalUser.get();
+        userData.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).plusMonths(1));
         userData.setAnimal(optionalAnimal.get());
         return recordMapper.toRecord(userRepository.save(userData));
     }
@@ -225,5 +231,60 @@ public class VolunteerService {
                     return new AnimalNotFoundException(animalId);
                 });
         return recordMapper.toRecord(userRepository.findByAnimal(animal));
+    }
+
+    /**
+     * Метод для продления испытательного срока
+     *
+     * @param id id пользователя
+     * @param number номер для выбора количества дней продления(14 или 30)
+     * @return возвращает пользователя
+     */
+    public UserRecord extensionPeriod(long id, int number) {
+        logger.info("Was invoked method for extension of the probation period");
+        UserData user = userRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("There is not user with id = {}", id);
+                    return new UserNotFoundException(id);
+                });
+        if (user.getDate() == null) {
+            throw new DateMissException();
+        }
+        LocalDateTime localDateTime = user.getDate();
+        if (number == 1) {
+            user.setDate(localDateTime.plusWeeks(2));
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 14 дней");
+
+        } else if (number == 2) {
+            user.setDate(localDateTime.plusMonths(1));
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 30 дней");
+        }
+        else {
+            throw new NumberNotFoundException();
+        }
+        return recordMapper.toRecord(userRepository.save(user));
+    }
+
+    /**
+     * Метод ищет пользователей по обращению в приют(собак или кошек)
+     *
+     * @param number номер для выбора вывода информации(приют кошек или приют собак)
+     * @return возвращает список пользователей
+     */
+    public Collection<UserRecord> getAllUserShelterDogOrShelterCat(int number) {
+        List<UserRecord> users = new ArrayList<>();
+        if (number == 1) {
+            return userRepository.findAll().stream()
+                    .map(recordMapper::toRecord)
+                    .filter(user -> user.getShelter() == 1)
+                    .collect(Collectors.toList());
+        } else if (number == 2) {
+            return userRepository.findAll().stream()
+                    .map(recordMapper::toRecord)
+                    .filter(user -> user.getShelter() == 2)
+                    .collect(Collectors.toList());
+        } else {
+           throw new NumberNotFoundException();
+        }
     }
 }

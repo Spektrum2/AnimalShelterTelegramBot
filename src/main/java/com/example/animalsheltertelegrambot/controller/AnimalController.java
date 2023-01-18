@@ -1,5 +1,4 @@
 package com.example.animalsheltertelegrambot.controller;
-
 import com.example.animalsheltertelegrambot.model.Animal;
 import com.example.animalsheltertelegrambot.record.AnimalRecord;
 import com.example.animalsheltertelegrambot.service.AnimalService;

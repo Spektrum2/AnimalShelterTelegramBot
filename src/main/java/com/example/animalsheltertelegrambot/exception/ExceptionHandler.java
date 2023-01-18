@@ -37,6 +37,18 @@ public class ExceptionHandler {
                 .body(String.format("Фотография с id = %d не найдена", e.getId()));
     }
 
+    @org.springframework.web.bind.annotation.ExceptionHandler(NumberNotFoundException.class)
+    public ResponseEntity<String> handlesNumberNotFoundException(NumberNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Введите номер 1 или 2");
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(DateMissException.class)
+    public ResponseEntity<String> handlesDateMissException(DateMissException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Пользовател не брал животное из приюта");
+    }
+
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handlesMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

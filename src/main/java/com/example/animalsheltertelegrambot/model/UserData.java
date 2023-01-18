@@ -2,6 +2,7 @@ package com.example.animalsheltertelegrambot.model;
 
 import javax.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +36,11 @@ public class UserData {
     private Integer shelter;
 
     /**
+     * Поле для даты оканчания испытательного периода
+     */
+    private LocalDateTime date;
+
+    /**
      * Поле для связи с таблицей Report
      */
     @OneToMany(mappedBy = "userData")
@@ -45,6 +51,7 @@ public class UserData {
      */
     @OneToOne
     private Animal animal;
+
 
     /**
      * Конструктор - создание нового объекта
@@ -180,6 +187,24 @@ public class UserData {
 
     public void setShelter(Integer shelter) {
         this.shelter = shelter;
+    }
+    /**
+     * Метод получения значения поля {@link UserData#date}
+     *
+     * @return возврощает дату оканчания испытательного периода
+     */
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    /**
+     * Метод изменения значения поля {@link UserData#date}
+     *
+     * @param date дата оканчания испытательного периода
+     */
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     /**
