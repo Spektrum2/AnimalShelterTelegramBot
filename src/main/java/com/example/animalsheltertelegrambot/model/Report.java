@@ -56,8 +56,7 @@ public class Report {
      * @param health         состояние здоровья
      * @param behaviorChange изменения в поведении
      */
-    public Report(String name, String diet, String health, String behaviorChange) {
-        this.name = name;
+    public Report(String diet, String health, String behaviorChange) {
         this.diet = diet;
         this.health = health;
         this.behaviorChange = behaviorChange;

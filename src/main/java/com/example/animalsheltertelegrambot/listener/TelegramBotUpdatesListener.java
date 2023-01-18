@@ -38,6 +38,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * parsePhone - регулярное выражение для парсинга строки
      */
     private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
+    private final String parseText = "([\\W+]+)/([\\W+]+)/([\\W+]+)";
     /**
      * Хранение значения, для разделения приютов для собак и кошек
      */
@@ -96,8 +97,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 //            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
+            int counter = 0;
             Integer animalType = 0;
             if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
+                parsing(text, chatId);
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseText)) {
                 parsing(text, chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
@@ -155,6 +159,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
                     case "Назад" -> shelterMenu(chatId);
+                    case "Прислать отчет о питомце" -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
                     default -> mailing(chatId, "Моя твоя не понимать");
                 }
             }
@@ -170,14 +175,27 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void parsing(String text, Long id) {
         logger.info("Парсинг");
-        Pattern pattern = Pattern.compile(parsePhone);
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.matches()) {
-            String phone = matcher.group(1);
-            String name = matcher.group(3);
-            UserData userData = new UserData(id, name, phone, save.get(id));
-            userRepository.save(userData);
-            mailing(id, "Контактные данные сохранены!");
+        if (text.matches(parsePhone)) {
+            Pattern pattern = Pattern.compile(parsePhone);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.matches()) {
+                String phone = matcher.group(1);
+                String name = matcher.group(3);
+                UserData userData = new UserData(id, name, phone, save.get(id));
+                userRepository.save(userData);
+                mailing(id, "Контактные данные сохранены!");
+            }
+            } else if (text.matches(parseText)){
+            Pattern pattern = Pattern.compile(parseText);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.matches()) {
+                String theAnimalsDiet = matcher.group(1);
+                String healthStatus = matcher.group(2);
+                String ChangeInBehavior = matcher.group(3);
+                Report report = new Report(theAnimalsDiet, healthStatus, ChangeInBehavior);
+                reportRepository.save(report);
+                mailing(id, "Контактные данные сохранены!");
+            }
         }
     }
 
