@@ -243,11 +243,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             reportRepository.save(report);
 
             mailing(id, "Отчет сохранен");
-            saveText.put(id, null);
-            saveDocument.put(id, null);
-            savePhotoSize.put(id, null);
+            clearing(id);
         }
     }
+
+    public void clearing(Long id) {
+        logger.info("Данные в мапе очищены");
+        saveText.put(id, null);
+        saveDocument.put(id, null);
+        savePhotoSize.put(id, null);
+    }
+
 
     /**
      * Данные методы отпраляет сообщение пользователю
