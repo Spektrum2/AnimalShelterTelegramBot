@@ -19,7 +19,7 @@ public class Volunteer {
     /**
      * Поля для id чата
      */
-    private Long idChat;
+    private Long chatId;
     /**
      * Поле имя волонтера
      */
@@ -122,21 +122,21 @@ public class Volunteer {
     }
 
     /**
-     * Метод получения значения поля {@link Volunteer#idChat}
+     * Метод получения значения поля {@link Volunteer#chatId}
      *
      * @return возвращает id чата
      */
-    public Long getIdChat() {
-        return idChat;
+    public Long getChatId() {
+        return chatId;
     }
 
     /**
-     * Метод изменения значения поля {@link Volunteer#idChat}
+     * Метод изменения значения поля {@link Volunteer#chatId}
      *
-     * @param idChat Возвращает id чата
+     * @param chatId Возвращает id чата
      */
-    public void setIdChat(Long idChat) {
-        this.idChat = idChat;
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     /**

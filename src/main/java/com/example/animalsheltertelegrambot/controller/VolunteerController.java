@@ -281,7 +281,7 @@ public class VolunteerController {
             }
     )
     @PatchMapping("/user/{id}/period/")
-    public UserRecord extensionPeriod(@Parameter(description = "Введите id животного", example = "1")
+    public UserRecord extensionPeriod(@Parameter(description = "Введите id пользователя", example = "1")
                                       @PathVariable Long id,
                                       @Parameter(description = "Введите 1 - увеличить испытательный срок на 14 дней. Введите 2  - увеличить испытательный срок на 30 дней", example = "1")
                                       @RequestParam("number") Integer number) {
@@ -307,13 +307,31 @@ public class VolunteerController {
         return volunteerService.getAllUserShelterDogOrShelterCat(number);
     }
 
-
-    @PatchMapping("/user/{id}/decision/")
-    public UserRecord sendMessageToUser(@Parameter(description = "Введите id животного", example = "1")
+    @Operation(
+            summary = "Отправка сообщений пользователю",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Отправка сообщений пользователю",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserData.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/user/{id}/decision/")
+    public String sendMessageToUser(@Parameter(description = "Введите id пользователя", example = "1")
                                       @PathVariable Long id,
                                       @Parameter(description = "Введите 1 - отчет заполняется плохо. Введите 2  - вы прошли испытательный срок. Введите 3 - вы не прошли испытательный срок", example = "1")
                                       @RequestParam("number") Integer number) {
-        return volunteerService.sendMessageToUser(id,number);
+        volunteerService.sendMessageToUser(id,number);
+        return "Сообщение отправлено";
+    }
+
+    @GetMapping("/user/{id}/chatId")
+    public UserRecord findUserChatId(@PathVariable Long id) {
+        return volunteerService.findUserByChatId(id);
     }
 
 }

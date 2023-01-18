@@ -253,11 +253,11 @@ public class VolunteerService {
         LocalDateTime localDateTime = user.getDate();
         if (number == 1) {
             user.setDate(localDateTime.plusWeeks(2));
-            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 14 дней");
+            telegramBotUpdatesListener.mailing(user.getChatId(), "Вам продлили период испытательного срока на 14 дней");
 
         } else if (number == 2) {
             user.setDate(localDateTime.plusMonths(1));
-            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 30 дней");
+            telegramBotUpdatesListener.mailing(user.getChatId(), "Вам продлили период испытательного срока на 30 дней");
         } else {
             throw new NumberNotFoundException();
         }
@@ -294,8 +294,7 @@ public class VolunteerService {
      * @param number номер для описания результата выбранных случаев
      * @return возвращает пользователя
      */
-
-    public UserRecord sendMessageToUser(Long id, int number) {
+    public void sendMessageToUser(Long id, int number) {
         logger.info("Was invoked method for sending messages to user if he passed the probation period or not");
         UserData user = userRepository.findById(id)
                 .orElseThrow(() -> {
@@ -303,20 +302,20 @@ public class VolunteerService {
                     return new UserNotFoundException(id);
                 });
         if (number == 1) {
-            user.getIdChat();
-            telegramBotUpdatesListener.mailing(user.getIdChat(), "«Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо. " +
+            telegramBotUpdatesListener.mailing(user.getChatId(), "«Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо. " +
                     "Пожалуйста, подойди ответственнее к этому занятию. " +
                     "В противном случае волонтеры приюта будут обязаны самолично проверять условия содержания животного».");
         } else if (number == 2) {
-            user.getIdChat();
-            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вы прошли испытательный срок.");
+            telegramBotUpdatesListener.mailing(user.getChatId(), "Вы прошли испытательный срок.");
         } else if (number == 3) {
-            user.getIdChat();
-            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вы не прошли испытательный срок.");
+            telegramBotUpdatesListener.mailing(user.getChatId(), "Вы не прошли испытательный срок.");
         } else {
-            throw new NumberNotFoundException();
+            throw new Number2NotFoundException();
         }
-        return recordMapper.toRecord(userRepository.save(user));
+    }
+
+    public UserRecord findUserByChatId(long chatId) {
+        return recordMapper.toRecord(userRepository.findByChatId(chatId));
 
     }
 }

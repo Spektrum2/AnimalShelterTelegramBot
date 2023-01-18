@@ -234,7 +234,7 @@ public class VolunteerControllerTest {
 
     private UserRecord generateUser(AnimalRecord animalRecord) {
         UserRecord userRecord = new UserRecord();
-        userRecord.setIdChat(faker.number().randomNumber());
+        userRecord.setChatId(faker.number().randomNumber());
         userRecord.setName(faker.name().firstName());
         userRecord.setPhoneNumber(faker.phoneNumber().phoneNumber());
         userRecord.setShelter(faker.random().nextInt(1, 2));

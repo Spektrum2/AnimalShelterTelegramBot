@@ -44,8 +44,9 @@ public class PhotoOfAnimalService {
      * @param photoSize фотография
      * @return возвращает фография
      */
-    public PhotoOfAnimal uploadPhoto(PhotoSize photoSize) {
+    public PhotoOfAnimal uploadPhoto(PhotoSize[] photoSizes) {
         logger.info("Was invoked method for upload photo from photoSize");
+        PhotoSize photoSize = photoSizes[2];
         try {
             GetFileResponse getFileResponse = telegramBot.execute(new GetFile(photoSize.fileId()));
             byte[] data = telegramBot.getFileContent(getFileResponse.file());

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class UserRecord {
     private Long id;
-    private Long idChat;
+    private Long chatId;
     private String name;
     private String phoneNumber;
     private Integer shelter;
@@ -20,11 +20,11 @@ public class UserRecord {
     }
 
     public Long getIdChat() {
-        return idChat;
+        return chatId;
     }
 
-    public void setIdChat(Long idChat) {
-        this.idChat = idChat;
+    public void setChatId(Long chatId) {
+        this.chatId = this.chatId;
     }
 
     public String getName() {

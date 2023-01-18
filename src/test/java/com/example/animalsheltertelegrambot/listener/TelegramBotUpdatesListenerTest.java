@@ -73,7 +73,7 @@ class TelegramBotUpdatesListenerTest {
         verify(userRepository).save(userArgumentCaptor.capture());
         UserData actualUser = userArgumentCaptor.getValue();
 
-        assertThat(actualUser.getIdChat()).isEqualTo(123L);
+        assertThat(actualUser.getChatId()).isEqualTo(123L);
         assertThat(actualUser.getName()).isEqualTo("Петя");
         assertThat(actualUser.getPhoneNumber()).isEqualTo("+7-923-456-2345");
 

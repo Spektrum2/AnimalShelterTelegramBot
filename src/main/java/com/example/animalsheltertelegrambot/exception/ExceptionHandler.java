@@ -49,6 +49,12 @@ public class ExceptionHandler {
                 .body("Пользовател не брал животное из приюта");
     }
 
+    @org.springframework.web.bind.annotation.ExceptionHandler(Number2NotFoundException.class)
+    public ResponseEntity<String> handlesNumber2NotFoundException(Number2NotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Введите один из номеров - 1, 2, 3");
+    }
+
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handlesMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
