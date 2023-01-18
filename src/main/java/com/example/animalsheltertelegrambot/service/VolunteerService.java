@@ -2,6 +2,7 @@ package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.component.RecordMapper;
 import com.example.animalsheltertelegrambot.exception.*;
+import com.example.animalsheltertelegrambot.listener.TelegramBotUpdatesListener;
 import com.example.animalsheltertelegrambot.model.Animal;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.model.Volunteer;
@@ -31,15 +32,17 @@ public class VolunteerService {
     private final UserRepository userRepository;
     private final AnimalRepository animalRepository;
     private final RecordMapper recordMapper;
+    private final TelegramBotUpdatesListener telegramBotUpdatesListener;
 
     public VolunteerService(VolunteerRepository volunteerRepository,
                             UserRepository userRepository,
                             AnimalRepository animalRepository,
-                            RecordMapper recordMapper) {
+                            RecordMapper recordMapper, TelegramBotUpdatesListener telegramBotUpdatesListener) {
         this.volunteerRepository = volunteerRepository;
         this.userRepository = userRepository;
         this.animalRepository = animalRepository;
         this.recordMapper = recordMapper;
+        this.telegramBotUpdatesListener = telegramBotUpdatesListener;
     }
 
     /**
@@ -250,8 +253,11 @@ public class VolunteerService {
         LocalDateTime localDateTime = user.getDate();
         if (number == 1) {
             user.setDate(localDateTime.plusWeeks(2));
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 14 дней");
+
         } else if (number == 2) {
             user.setDate(localDateTime.plusMonths(1));
+            telegramBotUpdatesListener.mailing(user.getIdChat(), "Вам продлили срок испытательного срока на 30 дней");
         }
         else {
             throw new NumberNotFoundException();
