@@ -2,9 +2,11 @@ package com.example.animalsheltertelegrambot.listener;
 
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
+import com.example.animalsheltertelegrambot.model.Volunteer;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
+import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -38,6 +40,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
     private final String parseText = "([\\W+]+)/([\\W+]+)/([\\W+]+)";
+    private final String parseIdText = "(([П][р][и][м][и]\\s[м][е][н][я])-([\\d+]+))";
     /**
      * Хранение значения, для разделения приютов для собак и кошек
      */
@@ -62,6 +65,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final PhotoRepository photoRepository;
     private final ReportRepository reportRepository;
+    private final VolunteerRepository volunteerRepository;
     private final PhotoOfAnimalService photoOfAnimalService;
 
     /**
@@ -73,12 +77,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
                                       ReportRepository reportRepository,
-                                      PhotoRepository photoRepository) {
+                                      PhotoRepository photoRepository, VolunteerRepository volunteerRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.photoRepository = photoRepository;
         this.photoOfAnimalService = photoOfAnimalService;
+        this.volunteerRepository = volunteerRepository;
     }
 
     /**
@@ -106,6 +111,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             Integer animalType = 0;
             if (update.message() != null && photo == null && document == null && text.matches(parsePhone)) {
                 userVerification(text, chatId);
+            } else if (update.message() != null && photo == null && document == null && text.matches(parseIdText)) {
+                setVolunteerChatId(text, chatId);
             } else if (update.message() != null && photo == null && document == null && text.matches(parseText)
                     && (saveDocument.get(chatId) == null && savePhotoSize.get(chatId) == null)) {
                 saveText.put(chatId, text);
@@ -217,6 +224,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 mailing(id, "Контактные данные сохранены!");
             }
             }
+    }
+
+    public void setVolunteerChatId(String text, Long id) {
+        logger.info("Запись ID волонтеру");
+        if (text.matches(parseIdText)) {
+            Pattern pattern = Pattern.compile(parseIdText);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.matches()) {
+                Long idVolunteer = Long.valueOf(matcher.group(3));
+                Optional<Volunteer> volunteer = volunteerRepository.findById(idVolunteer);
+                Volunteer volunteer1 = volunteer.get();
+                volunteer1.setIdChat(id);
+                volunteerRepository.save(volunteer1);
+                mailing(id, "ChatId присвоен");
+            }
+        }
     }
 
     public void userVerification(String text, Long id) {
