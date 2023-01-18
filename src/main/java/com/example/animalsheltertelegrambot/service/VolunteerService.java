@@ -1,10 +1,7 @@
 package com.example.animalsheltertelegrambot.service;
 
 import com.example.animalsheltertelegrambot.component.RecordMapper;
-import com.example.animalsheltertelegrambot.exception.AnimalNotFoundException;
-import com.example.animalsheltertelegrambot.exception.NumberNotFoundException;
-import com.example.animalsheltertelegrambot.exception.UserNotFoundException;
-import com.example.animalsheltertelegrambot.exception.VolunteerNotFoundException;
+import com.example.animalsheltertelegrambot.exception.*;
 import com.example.animalsheltertelegrambot.model.Animal;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.model.Volunteer;
@@ -247,12 +244,16 @@ public class VolunteerService {
                     logger.error("There is not user with id = {}", id);
                     return new UserNotFoundException(id);
                 });
+        if (user.getDate() == null) {
+            throw new DateMissException();
+        }
         LocalDateTime localDateTime = user.getDate();
         if (number == 1) {
             user.setDate(localDateTime.plusWeeks(2));
         } else if (number == 2) {
             user.setDate(localDateTime.plusMonths(1));
-        }else {
+        }
+        else {
             throw new NumberNotFoundException();
         }
         return recordMapper.toRecord(userRepository.save(user));

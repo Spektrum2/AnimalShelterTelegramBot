@@ -38,9 +38,15 @@ public class ExceptionHandler {
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(NumberNotFoundException.class)
-    public ResponseEntity<String> handlesPhotoNotFoundException(NumberNotFoundException e) {
+    public ResponseEntity<String> handlesNumberNotFoundException(NumberNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("Введите номер 1 или 2");
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(DateMissException.class)
+    public ResponseEntity<String> handlesDateMissException(DateMissException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Пользовател не брал животное из приюта");
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
