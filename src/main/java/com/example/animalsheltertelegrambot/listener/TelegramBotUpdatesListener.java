@@ -23,10 +23,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -200,9 +197,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 String theAnimalsDiet = matcher.group(1);
                 String healthStatus = matcher.group(2);
                 String ChangeInBehavior = matcher.group(3);
-                Report report = new Report(theAnimalsDiet, healthStatus, ChangeInBehavior);
+                UserData userData = new UserData();
+                for (int i = 0; i < userRepository.findAll().size(); i++) {
+                    if (userRepository.findAll().get(i).getIdChat().equals(id)) {
+                        userData = userRepository.findAll().get(i);
+                    }
+                }
+                LocalDateTime today = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+                Report report = new Report(theAnimalsDiet, healthStatus, ChangeInBehavior, userData, today);
                 reportRepository.save(report);
-                mailing(id, "Контактные данные сохранены!");
+                if (report.getPhotoOfAnimal() == null) {
+                    mailing(id, "Пожалуйста, загрузите фотографию");
+                } else {
+                    mailing(id, "Отчет сохранен");
+                }
             }
         }
     }

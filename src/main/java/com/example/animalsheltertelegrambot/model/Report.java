@@ -17,10 +17,6 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     /**
-     * Поле для хранения имени животного
-     */
-    private String name;
-    /**
      * Дата создания отчета
      */
     private LocalDateTime date;
@@ -51,15 +47,16 @@ public class Report {
     /**
      * Конструктор - создание нового объекта
      *
-     * @param name           имя животного
      * @param diet           рацион животного
      * @param health         состояние здоровья
      * @param behaviorChange изменения в поведении
      */
-    public Report(String diet, String health, String behaviorChange) {
+    public Report(String diet, String health, String behaviorChange, UserData userData, LocalDateTime date) {
+        this.date = date;
         this.diet = diet;
         this.health = health;
         this.behaviorChange = behaviorChange;
+        this.userData = userData;
     }
 
     /**
@@ -85,25 +82,6 @@ public class Report {
      */
     public void setId(Long id) {
         this.id = id;
-    }
-
-    /**
-     * Метод получения значения имени животного {@link Report#name}
-     *
-     * @return возвращает имя животного
-     */
-    public String getName() {
-        return name;
-    }
-
-
-    /**
-     * Метод изменения значения имени животного {@link Report#name}
-     *
-     * @param name имя животного
-     */
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
@@ -228,7 +206,7 @@ public class Report {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report report = (Report) o;
-        return Objects.equals(id, report.id) && Objects.equals(name, report.name) && Objects.equals(diet, report.diet) && Objects.equals(health, report.health) && Objects.equals(behaviorChange, report.behaviorChange);
+        return Objects.equals(id, report.id) && Objects.equals(diet, report.diet) && Objects.equals(health, report.health) && Objects.equals(behaviorChange, report.behaviorChange);
     }
 
     /**
@@ -238,7 +216,7 @@ public class Report {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, diet, health, behaviorChange);
+        return Objects.hash(id, diet, health, behaviorChange);
     }
 
     /**
@@ -250,7 +228,6 @@ public class Report {
     public String toString() {
         return "Report{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
                 ", diet='" + diet + '\'' +
                 ", health='" + health + '\'' +
                 ", behaviorChange='" + behaviorChange + '\'' +

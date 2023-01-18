@@ -51,7 +51,6 @@ public class RecordMapper {
     public ReportRecord toRecord(Report report) {
         ReportRecord reportRecord = new ReportRecord();
         reportRecord.setId(report.getId());
-        reportRecord.setName(report.getName());
         reportRecord.setDate(report.getDate());
         reportRecord.setDiet(report.getDiet());
         reportRecord.setHealth(report.getHealth());
@@ -102,7 +101,6 @@ public class RecordMapper {
 
     public Report toEntity(ReportRecord reportRecord) {
         Report report = new Report();
-        report.setName(reportRecord.getName());
         report.setDate(reportRecord.getDate());
         report.setDiet(reportRecord.getDiet());
         report.setHealth(reportRecord.getHealth());

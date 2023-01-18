@@ -54,7 +54,6 @@ CREATE TABLE photo_of_animal
 CREATE TABLE report
 (
     id                 BIGSERIAL primary key,
-    name               TEXT,
     date               TIMESTAMP,
     diet               TEXT,
     health             TEXT,
