@@ -99,28 +99,24 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-//            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
             Document document = update.message().document();
             PhotoSize[] photo = update.message().photo();
-            int counter = 0;
             Integer animalType = 0;
             if (update.message() != null && photo == null && document == null && text.matches(parsePhone)) {
                 parsing(text, chatId);
-                // если нет фото и документа но есть сообщение
             } else if (update.message() != null && photo == null && document == null && text.matches(parseText)
                     && (saveDocument.get(chatId) == null && savePhotoSize.get(chatId) == null)) {
                 saveText.put(chatId, text);
-                mailing(chatId, "Пожалуйста, загрузите фотографию");
-                // если есть фото или документ, и нет сообщения
+                mailing(chatId, UPLOAD_PHOTO);
             } else if (update.message() != null && (photo != null || document != null) && text == null && saveText.get(chatId) == null) {
                 if (document != null) {
                     saveDocument.put(chatId, document);
-                    mailing(chatId, "Пожалуйста, введите текст отчета");
+                    mailing(chatId, LOADING_THE_REPORT);
                 } else if (photo[1] != null) {
                     savePhotoSize.put(chatId, photo[1]);
-                    mailing(chatId, "Пожалуйста, введите текст отчета");
+                    mailing(chatId, LOADING_THE_REPORT);
                 }
             } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && text != null && text.matches(parseText)
             && document == null && photo == null) {
@@ -141,62 +137,61 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 }
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text != null) {
                 switch (text) {
-                    case "/start", "Выход" -> mainMenu(chatId);
-                    case "Приют для собак" -> {
+                    case START, EXIT -> mainMenu(chatId);
+                    case DOG_SHELTER -> {
                         animalType = 1;
                         save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
-                    case "Приют для кошек" -> {
+                    case CAT_SHELTER -> {
                         animalType = 2;
                         save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
-                    case "Узнать информацию о приюте" -> infoMenu(chatId);
-                    case "Рассказать о приюте" -> {
+                    case INFORMATION_SHELTER -> infoMenu(chatId);
+                    case STORY_SHELTER -> {
                         if (save.get(chatId) == 1) {
                             mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
                         } else if (save.get(chatId) == 2) {
                             mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
                         }
                     }
-                    case "Расписание работы приюта и адрес, схема проезда" -> {
+                    case JOB_DESCRIPTION -> {
                         if (save.get(chatId) == 1) {
                             mailing(chatId, WORKING_HOURS_DOG);
                         } else if (save.get(chatId) == 2) {
                             mailing(chatId, WORKING_HOURS_CAT);
                         }
                     }
-                    case "Рекомендации о технике безопасности на территории приюта" ->
+                    case SAFETY ->
                             mailing(chatId, SECURITY_MEASURES);
-                    case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, SECURITY_DATA);
-                    case "Позвать волонтера" ->
+                    case SECURITY -> mailing(chatId, SECURITY_DATA);
+                    case CALLING_A_VOLUNTEER ->
                             mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-                    case "Как взять животное из приюта" -> {
+                    case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
                         animalType = save.get(chatId);
                         infoAboutTheAnimalMenu(chatId, animalType);
                     }
-                    case "Правила знакомства с животным" -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
-                    case "Список документов, необходимых для того, чтобы взять животное из приюта" ->
+                    case RULES_OF_ACQUAINTANCE_WITH_ANIMALS -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
+                    case LIST_OF_DOCUMENTS_FOR_ANIMALS ->
                             mailing(chatId, LIST_OF_DOCUMENTS);
-                    case "Рекомендации по транспортировке животного" -> mailing(chatId, ANIMAL_TRANSPORTATION);
-                    case "Рекомендации по обустройству дома щенка", "Рекомендации по обустройству дома котенка" ->
+                    case TRANSPORTATION_RECOMMENDATION -> mailing(chatId, ANIMAL_TRANSPORTATION);
+                    case ARRANGEMENT_OF_THE_PUPPY, ARRANGEMENT_OF_THE_KITTEN ->
                             mailing(chatId, ANIMAL_ADAPTATION);
-                    case "Рекомендации по обустройству дома взрослой собаки", "Рекомендации по обустройству дома взрослого кота/кошки" ->
+                    case ARRANGEMENT_OF_THE_DOG, ARRANGEMENT_OF_THE_CAT ->
                             mailing(chatId, ADULT_ANIMAL_ADAPTATION);
-                    case "Советы кинолога по первичному общению с собакой" -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
-                    case "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой" ->
+                    case RECOMMENDATIONS -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
+                    case RECOMMENDATIONS_DOG_HANDLER ->
                             mailing(chatId, RECOMMENDATION_FOR_DOG_HANDLERS);
-                    case "Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта" ->
+                    case REASONS_FOR_REFUSAL_DOG, REASONS_FOR_REFUSAL_CAT ->
                             mailing(chatId, REASON_FOR_REFUSAL);
-                    case "Записать контактные данные для связи" ->
-                            mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
-                                    "Например: +7-909-945-4367 Андрей");
-                    case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
+                    case RECORDING_CONTACT_DETAILS ->
+                            mailing(chatId, EXAMPLE_OF_A_MESSAGE);
+                    case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
-                    case "Назад" -> shelterMenu(chatId);
-                    case "Прислать отчет о питомце" -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
-                    default -> mailing(chatId, "Моя твоя не понимать");
+                    case BACK -> shelterMenu(chatId);
+                    case SEND_REPORT -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
+                    default -> mailing(chatId, CALLING_A_VOLUNTEER);
                 }
             }
         });
@@ -281,8 +276,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void mainMenu(long chatId) {
         logger.info("Запуск меню выбора приюта");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                ("Приют для собак"), "Приют для кошек");
-        mailing(chatId, "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:", replyKeyboardMarkup);
+                (DOG_SHELTER), CAT_SHELTER);
+        mailing(chatId, GREETING, replyKeyboardMarkup);
     }
 
     /**
@@ -293,10 +288,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void shelterMenu(long chatId) {
         logger.info("Запуск основного меню");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Узнать информацию о приюте", "Как взять животное из приюта"},
-                new String[]{"Прислать отчет о питомце", "Позвать волонтера"},
-                new String[]{"Выход"});
-        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", replyKeyboardMarkup);
+                new String[]{INFORMATION_SHELTER, TAKE_AN_ANIMAL_FROM_A_SHELTER},
+                new String[]{SEND_REPORT, CALLING_A_VOLUNTEER},
+                new String[]{EXIT});
+        mailing(chatId, GREETING_SHELTER, replyKeyboardMarkup);
     }
 
     /**
@@ -307,11 +302,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void infoMenu(long chatId) {
         logger.info("Запуск информационного меню");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Рассказать о приюте", "Расписание работы приюта и адрес, схема проезда"},
-                new String[]{"Рекомендации о технике безопасности на территории приюта", "Записать контактные данные для связи"},
-                new String[]{"Контактные данные охраны для оформления пропуска на машину", "Позвать волонтера"},
-                new String[]{"Назад"});
-        mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                new String[]{STORY_SHELTER, JOB_DESCRIPTION},
+                new String[]{SAFETY, RECORDING_CONTACT_DETAILS},
+                new String[]{SECURITY, CALLING_A_VOLUNTEER},
+                new String[]{BACK});
+        mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
     }
 
     /**
@@ -324,22 +319,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         if (animalType == 1) {
             logger.info("Запуск меню собаки");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
-                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома щенка"},
-                    new String[]{"Рекомендации по обустройству дома взрослой собаки", "Рекомендаций по обустройству дома собаки с ограниченными возможностями"},
-                    new String[]{"Советы кинолога по первичному общению с собакой", "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой"},
-                    new String[]{"Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Записать контактные данные для связи"},
-                    new String[]{"Позвать волонтера", "Назад"});
-            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                    new String[]{RULES_OF_ACQUAINTANCE_WITH_ANIMALS, LIST_OF_DOCUMENTS_FOR_ANIMALS},
+                    new String[]{TRANSPORTATION_RECOMMENDATION, ARRANGEMENT_OF_THE_PUPPY},
+                    new String[]{ARRANGEMENT_OF_THE_DOG, RECOMMENDATIONS_DISABLED_DOG},
+                    new String[]{RECOMMENDATIONS, RECOMMENDATIONS_DOG_HANDLER},
+                    new String[]{REASONS_FOR_REFUSAL_DOG, RECORDING_CONTACT_DETAILS},
+                    new String[]{CALLING_A_VOLUNTEER, BACK});
+            mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
         } else if (animalType == 2) {
             logger.info("Запуск меню кота");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
-                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома котенка"},
-                    new String[]{"Рекомендации по обустройству дома взрослого кота/кошки", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями"},
-                    new String[]{"Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта", "Записать контактные данные для связи"},
-                    new String[]{"Позвать волонтера", "Назад"});
-            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                    new String[]{RULES_OF_ACQUAINTANCE_WITH_ANIMALS, LIST_OF_DOCUMENTS_FOR_ANIMALS},
+                    new String[]{TRANSPORTATION_RECOMMENDATION, ARRANGEMENT_OF_THE_KITTEN},
+                    new String[]{ARRANGEMENT_OF_THE_CAT, RECOMMENDATIONS_DISABLED_CAT},
+                    new String[]{REASONS_FOR_REFUSAL_CAT, RECORDING_CONTACT_DETAILS},
+                    new String[]{CALLING_A_VOLUNTEER, BACK});
+            mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
         }
     }
 
