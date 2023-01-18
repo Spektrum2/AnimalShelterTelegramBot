@@ -105,7 +105,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             PhotoSize[] photo = update.message().photo();
             Integer animalType = 0;
             if (update.message() != null && photo == null && document == null && text.matches(parsePhone)) {
-                parsing(text, chatId);
+                userVerification(text, chatId);
             } else if (update.message() != null && photo == null && document == null && text.matches(parseText)
                     && (saveDocument.get(chatId) == null && savePhotoSize.get(chatId) == null)) {
                 saveText.put(chatId, text);
@@ -217,6 +217,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 mailing(id, "Контактные данные сохранены!");
             }
             }
+    }
+
+    public void userVerification(String text, Long id) {
+        logger.info("Проверка пользователя");
+        for (int i = 0; i < userRepository.findAll().size(); i++) {
+            if (userRepository.findAll().get(i).getIdChat().equals(id)) {
+                mailing(id, "Вы уже внесли контактные данные");
+                break;
+            } else {
+                parsing(text, id);
+            }
+        }
     }
 
     public void parsing(String text, PhotoSize photoSize, Document document, Long id) {
