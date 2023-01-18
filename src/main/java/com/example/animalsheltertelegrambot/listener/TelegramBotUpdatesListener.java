@@ -1,6 +1,7 @@
 package com.example.animalsheltertelegrambot.listener;
 
 import com.example.animalsheltertelegrambot.model.Constants;
+import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
@@ -43,6 +44,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Хранение значения, для разделения приютов для собак и кошек
      */
     private final Map<Long, Integer> save = new HashMap<>();
+    private final Map<Long, PhotoSize> savePhotoSize = new HashMap<>();
+    private final Map<Long, Document> saveDocument = new HashMap<>();
+    private final Map<Long, String> saveText = new HashMap<>();
     /**
      * Объявление logger для логирования
      */
@@ -100,14 +104,36 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 //            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
+            Document document = update.message().document();
+            PhotoSize[] photo = update.message().photo();
             int counter = 0;
             Integer animalType = 0;
-            if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
+            if (update.message() != null && photo == null && document == null && text.matches(parsePhone)) {
                 parsing(text, chatId);
-            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseText)) {
-                parsing(text, chatId);
-            } else if (update.message() != null && update.message().photo() != null || update.message().document() != null) {
-                savePhotoBd(chatId, update.message().photo(), update.message().document());
+            } else if (update.message() != null && savePhotoSize.get(chatId) != null && saveDocument.get(chatId) != null && text.matches(parseText)) {
+                saveText.put(chatId, text);
+                mailing(chatId, "Пожалуйста, загрузите фотографию");
+            } else if (update.message() != null && (photo != null || document != null) && saveText.get(chatId) != null) {
+                if (document != null) {
+                    saveDocument.put(chatId, document);
+                    parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+                } else if (photo[1] != null) {
+                    savePhotoSize.put(chatId, photo[1]);
+                    parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+                }
+            } else if (update.message() != null && (photo != null || document != null) && saveText.get(chatId) == null) {
+                if (document != null) {
+                    saveDocument.put(chatId, document);
+                    mailing(chatId, "Пожалуйста, введите текст отчета");
+                } else if (photo[1] != null) {
+                    savePhotoSize.put(chatId, photo[1]);
+                    mailing(chatId, "Пожалуйста, введите текст отчета");
+                }
+            } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && text.matches(parseText)) {
+                saveText.put(chatId, text);
+                parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
+            } else if (update.message() != null && (savePhotoSize.get(chatId) != null || saveDocument.get(chatId) != null) && saveText.get(chatId) != null) {
+                parsingAndSavePhoto(saveText.get(chatId), savePhotoSize.get(chatId), saveDocument.get(chatId), chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
                     case "/start", "Выход" -> mainMenu(chatId);
@@ -190,35 +216,60 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 userRepository.save(userData);
                 mailing(id, "Контактные данные сохранены!");
             }
-            } else if (text.matches(parseText)){
-            Pattern pattern = Pattern.compile(parseText);
-            Matcher matcher = pattern.matcher(text);
-            if (matcher.matches()) {
-                String theAnimalsDiet = matcher.group(1);
-                String healthStatus = matcher.group(2);
-                String ChangeInBehavior = matcher.group(3);
-                UserData userData = new UserData();
-                for (int i = 0; i < userRepository.findAll().size(); i++) {
-                    if (userRepository.findAll().get(i).getIdChat().equals(id)) {
-                        userData = userRepository.findAll().get(i);
-                    }
-                }
-                LocalDateTime today = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-                Report report = new Report(theAnimalsDiet, healthStatus, ChangeInBehavior, userData, today);
-                reportRepository.save(report);
-                if (report.getPhotoOfAnimal() == null) {
-                    mailing(id, "Пожалуйста, загрузите фотографию");
-                } else {
-                    mailing(id, "Отчет сохранен");
+            }
+    }
+
+    public void parsingAndSavePhoto(String text, PhotoSize photoSize, Document document, Long id) {
+        logger.info("Запуск метода занесения данных для отчета");
+        Pattern pattern = Pattern.compile(parseText);
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.matches()) {
+            String theAnimalsDiet = matcher.group(1);
+            String healthStatus = matcher.group(2);
+            String ChangeInBehavior = matcher.group(3);
+            UserData userData = new UserData();
+            for (int i = 0; i < userRepository.findAll().size(); i++) {
+                if (userRepository.findAll().get(i).getIdChat().equals(id)) {
+                    userData = userRepository.findAll().get(i);
                 }
             }
+            LocalDateTime today = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+            Report report = new Report(theAnimalsDiet, healthStatus, ChangeInBehavior, userData, today);
+            if (document != null) {
+                report.setPhotoOfAnimal(photoOfAnimalService.uploadPhoto(document));
+            } else if (photoSize != null) {
+                report.setPhotoOfAnimal(photoOfAnimalService.uploadPhoto(photoSize));
+            }
+            reportRepository.save(report);
+
+            mailing(id, "Отчет сохранен");
+            saveText.put(id, null);
+            saveDocument.put(id, null);
+            savePhotoSize.put(id, null);
         }
     }
 
     public void savePhotoBd(Long id, PhotoSize[] photo, Document document) {
-        if (photo == null) {
-            photoOfAnimalService.uploadPhoto(document);
-        } else if (document == null) {
+        if (photo == null && document != null) {
+            UserData userData = new UserData();
+            for (int i = 0; i < userRepository.findAll().size(); i++) {
+                if (userRepository.findAll().get(i).getIdChat().equals(id))
+                {userData = userRepository.findAll().get(i);}
+            }
+            List<Report> reports = new ArrayList<>();
+            Report report = new Report();
+            for (int i = 0; i < reportRepository.findAll().size(); i++) {
+                if (reportRepository.findAll().get(i).equals(userData.getId())) {
+                    reports.add(reportRepository.findAll().get(i));
+                }
+            }
+            for (int i = 0; i < reports.size(); i++) {
+                if (reports.get(i).getDate().equals(LocalDateTime.now())) {
+                    report = reports.get(i);
+                }
+            }
+            report.setPhotoOfAnimal(photoOfAnimalService.uploadPhoto(document));
+        } else if (document == null && photo != null) {
             photoOfAnimalService.uploadPhoto(photo[1]);
         }
     }
