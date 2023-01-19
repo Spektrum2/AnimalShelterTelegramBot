@@ -51,12 +51,13 @@ public class Report {
      * @param health         состояние здоровья
      * @param behaviorChange изменения в поведении
      */
-    public Report(String diet, String health, String behaviorChange, UserData userData, LocalDateTime date) {
+    public Report(String diet, String health, String behaviorChange, UserData userData, LocalDateTime date, PhotoOfAnimal photoOfAnimal) {
         this.date = date;
         this.diet = diet;
         this.health = health;
         this.behaviorChange = behaviorChange;
         this.userData = userData;
+        this.photoOfAnimal = photoOfAnimal;
     }
 
     /**
