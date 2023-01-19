@@ -4,7 +4,6 @@ import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
 import com.example.animalsheltertelegrambot.model.Volunteer;
-import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
 import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
@@ -39,14 +38,33 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * parsePhone - регулярное выражение для парсинга строки
      */
     private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
+    /**
+     * регулярное выражение парсинга строки для текста отчета
+     */
     private final String parseText = "([\\W+]+)/([\\W+]+)/([\\W+]+)";
+    /**
+     * регулярное выражение парсинга строки для занесения волонетру id чата
+     */
     private final String parseIdText = "(([П][р][и][м][и]\\s[м][е][н][я])-([\\d+]+))";
+    /**
+     * регулярное выражение парсинга строки для ответа на сообщение пользователю через чат бота
+     */
     private final String parseResponse = "(([\\d+]+)\\s=\\s([\\W+]+))";
     /**
      * Хранение значения, для разделения приютов для собак и кошек
      */
     private final Map<Long, Integer> save = new HashMap<>();
+    /**
+     * Хранение значения, для открытия/закрытия чата
+     */
+    private final Map<Long, Integer> answer = new HashMap<>();
+    /**
+     * Хранение фото для отчета
+     */
     private final Map<Long, PhotoOfAnimal> photo = new HashMap<>();
+    /**
+     * Хранение строки отчета
+     */
     private final Map<Long, String> report = new HashMap<>();
     /**
      * Объявление logger для логирования
@@ -63,10 +81,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Объявления сервиса для обработки фотографии животного
      */
-    private final PhotoRepository photoRepository;
-    private final ReportRepository reportRepository;
-    private final VolunteerRepository volunteerRepository;
     private final PhotoOfAnimalService photoOfAnimalService;
+    /**
+     * Обьяление репозитория отчетов
+     */
+    private final ReportRepository reportRepository;
+    /**
+     * Обьявление репозитория волонетров
+     */
+    private final VolunteerRepository volunteerRepository;
 
     /**
      * Инжектим бота + репозиторий
@@ -74,14 +97,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param telegramBot          бот
      * @param userRepository       репозиторий
      * @param photoOfAnimalService обработка фотографии животного
+     * @param reportRepository     репозиторий
+     * @param volunteerRepository  репозиторий
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
                                       ReportRepository reportRepository,
-                                      PhotoRepository photoRepository, VolunteerRepository volunteerRepository) {
+                                      VolunteerRepository volunteerRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
-        this.photoRepository = photoRepository;
         this.photoOfAnimalService = photoOfAnimalService;
         this.volunteerRepository = volunteerRepository;
     }
@@ -104,14 +128,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-//            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
             Integer animalType;
+            int confirmation = 0;
             if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
                 userVerification(text, chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
-                responseToTheUser(text, chatId);
+                responseToTheUser(text);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
                 setVolunteerChatId(text, chatId);
             } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
@@ -125,7 +149,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 checkReport(chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
-                    case START, EXIT -> mainMenu(chatId);
+                    case START -> mainMenu(chatId);
+                    case EXIT -> mainMenu(chatId);
                     case DOG_SHELTER -> {
                         animalType = 1;
                         save.put(chatId, animalType);
@@ -162,8 +187,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case SAFETY ->
                             mailing(chatId, SECURITY_MEASURES);
                     case SECURITY -> mailing(chatId, SECURITY_DATA);
-                    case CALLING_A_VOLUNTEER ->
-                            mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
+                    case CALLING_A_VOLUNTEER -> callingVolunteer(chatId);
+                    case START_A_CHAT -> {
+                        confirmation = 1;
+                        answer.put(chatId, confirmation);
+                        mailing(chatId, USER_QUESTION);
+                    }
+                    case CLOSE_THE_CHAT ->{
+                        answer.remove(chatId);
+                        shelterMenu(chatId);
+                    }
+                    case BACK -> shelterMenu(chatId);
                     case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
                         animalType = save.get(chatId);
                         infoAboutTheAnimalMenu(chatId, animalType);
@@ -185,11 +219,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             mailing(chatId, EXAMPLE_OF_A_MESSAGE);
                     case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
-                    case BACK -> shelterMenu(chatId);
                     case SEND_REPORT -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
                     default ->{
-                        mailing(chatId, CALLING_A_VOLUNTEER);
-                        messageToTheVolunteer(chatId, text);
+                        if (answer.get(chatId) != null) {
+                            messageToTheVolunteer(chatId, text);
+                        } else {
+                            mailing(chatId, STANDARD_RESPONSE);
+                        }
                     }
                 }
             }
@@ -216,6 +252,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * @param text строка содержащее кодовое слово и id волонтера
+     * @param id id чата
+     */
     public void setVolunteerChatId(String text, Long id){
         logger.info("Запись ID волонтеру");
             Pattern pattern = Pattern.compile(parseIdText);
@@ -234,6 +274,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             }
     }
 
+    /**
+     * Метод проверки повторной регистрации
+     * @param text данные пользователя
+     * @param id id чата
+     */
     public void userVerification(String text, Long id) {
         logger.info("Проверка пользователя");
         UserData userData = userRepository.findByChatId(id);
@@ -244,25 +289,45 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Метод по отправке сообщения волонтеру
+     * @param chatId id чата
+     * @param text сообщение пользователя
+     */
     public void messageToTheVolunteer(Long chatId, String text) {
         logger.info("Отправка сообщения волонтеру");
         Random random = new Random();
-        List<Long> volunteerChatId = volunteerRepository.findAll().stream().map(Volunteer::getChatId).toList();
-        mailing(volunteerChatId.get(random.nextInt(volunteerChatId.size())), "Пользователь - " + chatId + " задал вопрос : " + text);
+        List<Long> volunteerChatId = volunteerRepository.findAll().stream().map(Volunteer::getChatId).filter(Objects::nonNull).toList();
+        if (volunteerChatId.isEmpty()) {
+            mailing(chatId,"Волонтеры заняты");
+        } else {
+            mailing(volunteerChatId.get(random.nextInt(volunteerChatId.size())), "Пользователь - " + chatId + " задал вопрос : " + text);
+        }
     }
 
-    public void responseToTheUser(String text,Long chatId) {
+    /**
+     * Метод по отправке сообщения пользователю
+     * @param text ответ волонтера
+     */
+    public void responseToTheUser(String text) {
         logger.info("Отправка сообщения пользователю");
         Pattern pattern = Pattern.compile(parseResponse);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
-            Long id = Long.valueOf(matcher.group(2));
+            long id = Long.parseLong(matcher.group(2));
             String answer = matcher.group(3);
-            mailing(id, "Ответ волонетра: " + answer);
+            mailing(id, "Ответ волонтера: " + answer);
         }
     }
 
+    /**
+     * Метод заполнения отчета
+     * @param text текст отчета
+     * @param photoOfAnimal фотография животного
+     * @param chatId id чата
+     */
     public void parsing(String text, PhotoOfAnimal photoOfAnimal, long chatId) {
+        logger.info("Заполнение отчета");
         Pattern pattern = Pattern.compile(parseText);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
@@ -278,18 +343,26 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Метод проверки данных для отчета
+     * @param chatId id чата
+     */
     public void checkReport(long chatId) {
         if (photo.get(chatId) == null) {
-            mailing(chatId, "Пришлите фотографию");
+            mailing(chatId, UPLOAD_PHOTO);
         }
         if (report.get(chatId) == null) {
-            mailing(chatId, "Пришлите текст отчета");
+            mailing(chatId, LOADING_THE_REPORT);
         }
         if (photo.get(chatId) != null && report.get(chatId) != null) {
             parsing(report.get(chatId), photo.get(chatId), chatId);
         }
     }
 
+    /**
+     * Метод очистки мапы
+     * @param chatId id чата
+     */
     public void cleanParameters(long chatId) {
         photo.remove(chatId);
         report.remove(chatId);
@@ -382,6 +455,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     new String[]{CALLING_A_VOLUNTEER, BACK});
             mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
         }
+    }
+
+    /**
+     * Метод вызова чата с волонетром
+     * @param chatId id чата
+     */
+    private void callingVolunteer(long chatId) {
+        logger.info("Запуск меню подтверждения вызова волонтера");
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                START_A_CHAT, CLOSE_THE_CHAT);
+                mailing(chatId, "Хотите задать вопрос волонтеру?", replyKeyboardMarkup);
     }
 
     /**
