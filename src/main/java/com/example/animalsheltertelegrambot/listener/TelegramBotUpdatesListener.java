@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +45,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Хранение значения, для разделения приютов для собак и кошек
      */
     private final Map<Long, Integer> save = new HashMap<>();
+    private final Map<Long, PhotoOfAnimal> photo = new HashMap<>();
+    private final Map<Long, String> report = new HashMap<>();
     /**
      * Объявление logger для логирования
      */
@@ -61,8 +65,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final PhotoRepository photoRepository;
     private final ReportRepository reportRepository;
     private final PhotoOfAnimalService photoOfAnimalService;
-    private  PhotoOfAnimal photoOfAnimal;
-    private String report = null;
 
     /**
      * Инжектим бота + репозиторий
@@ -107,11 +109,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 parsing(text, chatId);
             } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
                 if (update.message().photo() != null) {
-                    photoOfAnimal = photoOfAnimalService.uploadPhoto(update.message().photo());
+                    photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().photo()));
                 } else if (update.message().document() != null) {
-                    photoOfAnimal = photoOfAnimalService.uploadPhoto(update.message().document());
-                }else {
-                    report = text;
+                    photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().document()));
+                } else {
+                    report.put(chatId, text);
                 }
                 checkReport(chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
@@ -194,8 +196,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             UserData userData = new UserData(id, name, phone, save.get(id));
             userRepository.save(userData);
             mailing(id, "Контактные данные сохранены!");
-            }
         }
+    }
 
     public void parsing(String text, PhotoOfAnimal photoOfAnimal, long chatId) {
         Pattern pattern = Pattern.compile(parseText);
@@ -217,25 +219,25 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         report.setUserData(userData);
         report.setPhotoOfAnimal(photoOfAnimal);
         reportRepository.save(report);
-        cleanParameters();
+        cleanParameters(chatId);
         mailing(chatId, "Отчет создан");
     }
 
     public void checkReport(long chatId) {
-        if (photoOfAnimal == null) {
+        if (photo.get(chatId) == null) {
             mailing(chatId, "Пришлите фотографию");
         }
-        if (report == null) {
+        if (report.get(chatId) == null) {
             mailing(chatId, "Пришлите текст отчета");
         }
-        if (photoOfAnimal != null && report != null) {
-            parsing(report, photoOfAnimal, chatId);
+        if (photo.get(chatId) != null && report.get(chatId) != null) {
+            parsing(report.get(chatId), photo.get(chatId), chatId);
         }
     }
 
-    public void cleanParameters() {
-        photoOfAnimal = null;
-        report = null;
+    public void cleanParameters(long chatId) {
+        photo.remove(chatId);
+        report.remove(chatId);
     }
 
 //    public void savePhotoBd(Long id, PhotoSize[] photo, Document document) {
@@ -357,35 +359,34 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод для атоматического послания сообщений
      */
-    @Scheduled(cron = "0 0/1 * * * *")
+    @Scheduled(cron = "0 21 * * * *")
+    @Transactional(readOnly = true)
     public void warning() {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-//        try {
-//            userRepository.findAll().stream()
-//                    .map(UserData::getReports)
-//                    .map(reports ->
-//                            reports.stream()
-//                                    .reduce((first, second) -> second)
-//                                    .orElse(null))
-//                    .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) == 1 || ChronoUnit.DAYS.between(report.getDate(), now) == 2)
-//                    .map(Report::getUserData)
-//                    .forEach(user -> telegramBot.execute(new SendMessage(user.getIdChat(), "Сделайте отчет")));
-//        } catch (NullPointerException e) {
-//            return;
-//        }
-//
-//        userRepository.findAll().stream()
-//                .map(UserData::getReports)
-//                .filter(Objects::nonNull)
-//                .map(reports ->
-//                        reports.stream()
-//                                .reduce((first, second) -> second)
-//                                .orElse(null))
-//                .filter(Objects::nonNull)
-//                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
-//                .map(Report::getUserData)
-//                .map(UserData::getAnimal)
-//                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getIdChat(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
+
+            userRepository.findAll().stream()
+                    .map(UserData::getReports)
+                    .map(reports ->
+                            reports.stream()
+                                    .reduce((first, second) -> second)
+                                    .orElse(null))
+                    .filter(Objects::nonNull)
+                    .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) == 1 || ChronoUnit.DAYS.between(report.getDate(), now) == 2)
+                    .map(Report::getUserData)
+                    .forEach(user -> telegramBot.execute(new SendMessage(user.getChatId(), "Сделайте отчет")));
+
+
+        userRepository.findAll().stream()
+                .map(UserData::getReports)
+                .map(reports ->
+                        reports.stream()
+                                .reduce((first, second) -> second)
+                                .orElse(null))
+                .filter(Objects::nonNull)
+                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
+                .map(Report::getUserData)
+                .map(UserData::getAnimal)
+                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
 
         userRepository.findAll().stream()
                 .filter(user -> user.getDate() != null && user.getDate().toLocalDate().equals(now.toLocalDate()))
