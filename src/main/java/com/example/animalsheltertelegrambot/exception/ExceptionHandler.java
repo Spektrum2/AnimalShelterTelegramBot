@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ExceptionHandler {
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(VolunteerNotFoundException.class)
-    public ResponseEntity<String> handlesVolunteerNotFoundException(VolunteerNotFoundException e) {
+    @org.springframework.web.bind.annotation.ExceptionHandler(VolonteerNotFoundException.class)
+    public ResponseEntity<String> handlesVolunteerNotFoundException(VolonteerNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(String.format("Волантер с id = %d не найден", e.getId()));
     }

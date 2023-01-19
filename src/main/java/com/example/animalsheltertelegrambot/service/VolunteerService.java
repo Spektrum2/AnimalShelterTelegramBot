@@ -81,7 +81,7 @@ public class VolunteerService {
         return recordMapper.toRecord(volunteerRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("There is not volunteer with id = {}", id);
-                    return new VolunteerNotFoundException(id);
+                    return new VolonteerNotFoundException(id);
                 }));
     }
 
@@ -123,7 +123,7 @@ public class VolunteerService {
         Volunteer volunteer = volunteerRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("There is not volunteer with id = {}", id);
-                    return new VolunteerNotFoundException(id);
+                    return new VolonteerNotFoundException(id);
                 });
         volunteerRepository.delete(volunteer);
         return recordMapper.toRecord(volunteer);
@@ -141,7 +141,7 @@ public class VolunteerService {
         Volunteer oldVolunteer = volunteerRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("There is not volunteer with id = {}", id);
-                    return new VolunteerNotFoundException(id);
+                    return new VolonteerNotFoundException(id);
                 });
         oldVolunteer.setName(volunteerRecord.getName());
         oldVolunteer.setLastName(volunteerRecord.getLastName());
@@ -161,7 +161,7 @@ public class VolunteerService {
         Optional<Animal> optionalAnimal = animalRepository.findById(animalId);
         if (optionalVolunteer.isEmpty()) {
             logger.error("There is not volunteer with id = {}", id);
-            throw new VolunteerNotFoundException(id);
+            throw new VolonteerNotFoundException(id);
         }
         if (optionalAnimal.isEmpty()) {
             logger.error("There is not animal with id = {}", animalId);

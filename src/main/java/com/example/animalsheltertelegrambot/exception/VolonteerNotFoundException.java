@@ -1,9 +1,9 @@
 package com.example.animalsheltertelegrambot.exception;
 
-public class VolunteerNotFoundException extends RuntimeException {
+public class VolonteerNotFoundException extends RuntimeException {
     private final long id;
 
-    public VolunteerNotFoundException(long id) {
+    public VolonteerNotFoundException(long id) {
         this.id = id;
     }
 

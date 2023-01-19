@@ -3,9 +3,11 @@ package com.example.animalsheltertelegrambot.listener;
 import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
 import com.example.animalsheltertelegrambot.model.Report;
 import com.example.animalsheltertelegrambot.model.UserData;
+import com.example.animalsheltertelegrambot.model.Volunteer;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
 import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
+import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -22,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +40,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final String parsePhone = "([+][7]-\\d{3}-\\d{3}-\\d{4})(\\s)([\\W+]+)";
     private final String parseText = "([\\W+]+)/([\\W+]+)/([\\W+]+)";
+    private final String parseIdText = "(([П][р][и][м][и]\\s[м][е][н][я])-([\\d+]+))";
+    private final String parseResponse = "(([\\d+]+)\\s=\\s([\\W+]+))";
     /**
      * Хранение значения, для разделения приютов для собак и кошек
      */
@@ -64,6 +65,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final PhotoRepository photoRepository;
     private final ReportRepository reportRepository;
+    private final VolunteerRepository volunteerRepository;
     private final PhotoOfAnimalService photoOfAnimalService;
 
     /**
@@ -75,12 +77,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
                                       ReportRepository reportRepository,
-                                      PhotoRepository photoRepository) {
+                                      PhotoRepository photoRepository, VolunteerRepository volunteerRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.photoRepository = photoRepository;
         this.photoOfAnimalService = photoOfAnimalService;
+        this.volunteerRepository = volunteerRepository;
     }
 
     /**
@@ -106,7 +109,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             Long chatId = update.message().chat().id();
             Integer animalType;
             if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
-                parsing(text, chatId);
+                userVerification(text, chatId);
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
+                responseToTheUser(text, chatId);
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
+                setVolunteerChatId(text, chatId);
             } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
                 if (update.message().photo() != null) {
                     photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().photo()));
@@ -118,62 +125,72 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 checkReport(chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
-                    case "/start", "Выход" -> mainMenu(chatId);
-                    case "Приют для собак" -> {
+                    case START, EXIT -> mainMenu(chatId);
+                    case DOG_SHELTER -> {
                         animalType = 1;
                         save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
-                    case "Приют для кошек" -> {
+                    case CAT_SHELTER -> {
                         animalType = 2;
                         save.put(chatId, animalType);
                         shelterMenu(chatId);
                     }
-                    case "Узнать информацию о приюте" -> infoMenu(chatId);
-                    case "Рассказать о приюте" -> {
-                        if (save.get(chatId) == 1) {
-                            mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
-                        } else if (save.get(chatId) == 2) {
-                            mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
+                    case INFORMATION_SHELTER -> infoMenu(chatId);
+                    case STORY_SHELTER -> {
+                        try {
+                            if (save.get(chatId) == 1) {
+                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
+                            } else if (save.get(chatId) == 2) {
+                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
+                            }
+                        } catch (NullPointerException e) {
+                            mainMenu(chatId);
                         }
                     }
-                    case "Расписание работы приюта и адрес, схема проезда" -> {
-                        if (save.get(chatId) == 1) {
-                            mailing(chatId, WORKING_HOURS_DOG);
-                        } else if (save.get(chatId) == 2) {
-                            mailing(chatId, WORKING_HOURS_CAT);
+                    case JOB_DESCRIPTION -> {
+                        try {
+                            if (save.get(chatId) == 1) {
+                                mailing(chatId, WORKING_HOURS_DOG);
+                            } else if (save.get(chatId) == 2) {
+                                mailing(chatId, WORKING_HOURS_CAT);
+                            }
+                        } catch (NullPointerException e) {
+                            mainMenu(chatId);
                         }
                     }
-                    case "Рекомендации о технике безопасности на территории приюта" ->
+                    case SAFETY ->
                             mailing(chatId, SECURITY_MEASURES);
-                    case "Контактные данные охраны для оформления пропуска на машину" -> mailing(chatId, SECURITY_DATA);
-                    case "Позвать волонтера" ->
+                    case SECURITY -> mailing(chatId, SECURITY_DATA);
+                    case CALLING_A_VOLUNTEER ->
                             mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
-                    case "Как взять животное из приюта" -> {
+                    case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
                         animalType = save.get(chatId);
                         infoAboutTheAnimalMenu(chatId, animalType);
                     }
-                    case "Правила знакомства с животным" -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
-                    case "Список документов, необходимых для того, чтобы взять животное из приюта" ->
+                    case RULES_OF_ACQUAINTANCE_WITH_ANIMALS -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
+                    case LIST_OF_DOCUMENTS_FOR_ANIMALS ->
                             mailing(chatId, LIST_OF_DOCUMENTS);
-                    case "Рекомендации по транспортировке животного" -> mailing(chatId, ANIMAL_TRANSPORTATION);
-                    case "Рекомендации по обустройству дома щенка", "Рекомендации по обустройству дома котенка" ->
+                    case TRANSPORTATION_RECOMMENDATION -> mailing(chatId, ANIMAL_TRANSPORTATION);
+                    case ARRANGEMENT_OF_THE_PUPPY, ARRANGEMENT_OF_THE_KITTEN ->
                             mailing(chatId, ANIMAL_ADAPTATION);
-                    case "Рекомендации по обустройству дома взрослой собаки", "Рекомендации по обустройству дома взрослого кота/кошки" ->
+                    case ARRANGEMENT_OF_THE_DOG, ARRANGEMENT_OF_THE_CAT ->
                             mailing(chatId, ADULT_ANIMAL_ADAPTATION);
-                    case "Советы кинолога по первичному общению с собакой" -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
-                    case "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой" ->
+                    case RECOMMENDATIONS -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
+                    case RECOMMENDATIONS_DOG_HANDLER ->
                             mailing(chatId, RECOMMENDATION_FOR_DOG_HANDLERS);
-                    case "Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта" ->
+                    case REASONS_FOR_REFUSAL_DOG, REASONS_FOR_REFUSAL_CAT ->
                             mailing(chatId, REASON_FOR_REFUSAL);
-                    case "Записать контактные данные для связи" ->
-                            mailing(chatId, "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
-                                    "Например: +7-909-945-4367 Андрей");
-                    case "Рекомендаций по обустройству дома собаки с ограниченными возможностями", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями" ->
+                    case RECORDING_CONTACT_DETAILS ->
+                            mailing(chatId, EXAMPLE_OF_A_MESSAGE);
+                    case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
-                    case "Назад" -> shelterMenu(chatId);
-                    case "Прислать отчет о питомце" -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
-                    default -> mailing(chatId, "Моя твоя не понимать");
+                    case BACK -> shelterMenu(chatId);
+                    case SEND_REPORT -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
+                    default ->{
+                        mailing(chatId, CALLING_A_VOLUNTEER);
+                        messageToTheVolunteer(chatId, text);
+                    }
                 }
             }
         });
@@ -199,28 +216,66 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    public void setVolunteerChatId(String text, Long id){
+        logger.info("Запись ID волонтеру");
+            Pattern pattern = Pattern.compile(parseIdText);
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.matches()) {
+                Long idVolunteer = Long.valueOf(matcher.group(3));
+                Optional<Volunteer> volunteer = volunteerRepository.findById(idVolunteer);
+                try {
+                    Volunteer volunteer1 = volunteer.get();
+                    volunteer1.setChatId(id);
+                    volunteerRepository.save(volunteer1);
+                    mailing(id, "ID присвоен");
+                } catch (NoSuchElementException e) {
+                    mailing(id, "Волонтер не найден");
+                }
+            }
+    }
+
+    public void userVerification(String text, Long id) {
+        logger.info("Проверка пользователя");
+        UserData userData = userRepository.findByChatId(id);
+        if (userData == null) {
+            parsing(text, id);
+        } else {
+            mailing(id, "Вы уже внесли контактные данные");
+        }
+    }
+
+    public void messageToTheVolunteer(Long chatId, String text) {
+        logger.info("Отправка сообщения волонтеру");
+        Random random = new Random();
+        List<Long> volunteerChatId = volunteerRepository.findAll().stream().map(Volunteer::getChatId).toList();
+        mailing(volunteerChatId.get(random.nextInt(volunteerChatId.size())), "Пользователь - " + chatId + " задал вопрос : " + text);
+    }
+
+    public void responseToTheUser(String text,Long chatId) {
+        logger.info("Отправка сообщения пользователю");
+        Pattern pattern = Pattern.compile(parseResponse);
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.matches()) {
+            Long id = Long.valueOf(matcher.group(2));
+            String answer = matcher.group(3);
+            mailing(id, "Ответ волонетра: " + answer);
+        }
+    }
+
     public void parsing(String text, PhotoOfAnimal photoOfAnimal, long chatId) {
         Pattern pattern = Pattern.compile(parseText);
         Matcher matcher = pattern.matcher(text);
-        String theAnimalsDiet = null;
-        String healthStatus = null;
-        String changeInBehavior = null;
         if (matcher.matches()) {
-            theAnimalsDiet = matcher.group(1);
-            healthStatus = matcher.group(2);
-            changeInBehavior = matcher.group(3);
+            String theAnimalsDiet = matcher.group(1);
+            String healthStatus = matcher.group(2);
+            String changeInBehavior = matcher.group(3);
+            UserData userData = userRepository.findByChatId(chatId);
+            LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+            Report report = new Report(theAnimalsDiet, healthStatus, changeInBehavior, userData, dateTime, photoOfAnimal);
+            reportRepository.save(report);
+            cleanParameters(chatId);
+            mailing(chatId, "Отчет создан");
         }
-        UserData userData = userRepository.findByChatId(chatId);
-        Report report = new Report();
-        report.setDate(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        report.setDiet(theAnimalsDiet);
-        report.setHealth(healthStatus);
-        report.setBehaviorChange(changeInBehavior);
-        report.setUserData(userData);
-        report.setPhotoOfAnimal(photoOfAnimal);
-        reportRepository.save(report);
-        cleanParameters(chatId);
-        mailing(chatId, "Отчет создан");
     }
 
     public void checkReport(long chatId) {
@@ -239,14 +294,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         photo.remove(chatId);
         report.remove(chatId);
     }
-
-//    public void savePhotoBd(Long id, PhotoSize[] photo, Document document) {
-//        if (photo == null) {
-//            photoOfAnimalService.uploadPhoto(document);
-//        } else if (document == null) {
-//            photoOfAnimalService.uploadPhoto(photo[1]);
-//        }
-//    }
 
     /**
      * Данные методы отпраляет сообщение пользователю
@@ -275,8 +322,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void mainMenu(long chatId) {
         logger.info("Запуск меню выбора приюта");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                ("Приют для собак"), "Приют для кошек");
-        mailing(chatId, "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:", replyKeyboardMarkup);
+                (DOG_SHELTER), CAT_SHELTER);
+        mailing(chatId, GREETING, replyKeyboardMarkup);
     }
 
     /**
@@ -287,10 +334,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void shelterMenu(long chatId) {
         logger.info("Запуск основного меню");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Узнать информацию о приюте", "Как взять животное из приюта"},
-                new String[]{"Прислать отчет о питомце", "Позвать волонтера"},
-                new String[]{"Выход"});
-        mailing(chatId, "Добрый день. Рады приветствовать Вас в нашем приюте.", replyKeyboardMarkup);
+                new String[]{INFORMATION_SHELTER, TAKE_AN_ANIMAL_FROM_A_SHELTER},
+                new String[]{SEND_REPORT, CALLING_A_VOLUNTEER},
+                new String[]{EXIT});
+        mailing(chatId, GREETING_SHELTER, replyKeyboardMarkup);
     }
 
     /**
@@ -301,11 +348,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void infoMenu(long chatId) {
         logger.info("Запуск информационного меню");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Рассказать о приюте", "Расписание работы приюта и адрес, схема проезда"},
-                new String[]{"Рекомендации о технике безопасности на территории приюта", "Записать контактные данные для связи"},
-                new String[]{"Контактные данные охраны для оформления пропуска на машину", "Позвать волонтера"},
-                new String[]{"Назад"});
-        mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                new String[]{STORY_SHELTER, JOB_DESCRIPTION},
+                new String[]{SAFETY, RECORDING_CONTACT_DETAILS},
+                new String[]{SECURITY, CALLING_A_VOLUNTEER},
+                new String[]{BACK});
+        mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
     }
 
     /**
@@ -318,22 +365,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         if (animalType == 1) {
             logger.info("Запуск меню собаки");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
-                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома щенка"},
-                    new String[]{"Рекомендации по обустройству дома взрослой собаки", "Рекомендаций по обустройству дома собаки с ограниченными возможностями"},
-                    new String[]{"Советы кинолога по первичному общению с собакой", "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой"},
-                    new String[]{"Список причин, почему могут отказать в просьбе забрать собаку из приюта", "Записать контактные данные для связи"},
-                    new String[]{"Позвать волонтера", "Назад"});
-            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                    new String[]{RULES_OF_ACQUAINTANCE_WITH_ANIMALS, LIST_OF_DOCUMENTS_FOR_ANIMALS},
+                    new String[]{TRANSPORTATION_RECOMMENDATION, ARRANGEMENT_OF_THE_PUPPY},
+                    new String[]{ARRANGEMENT_OF_THE_DOG, RECOMMENDATIONS_DISABLED_DOG},
+                    new String[]{RECOMMENDATIONS, RECOMMENDATIONS_DOG_HANDLER},
+                    new String[]{REASONS_FOR_REFUSAL_DOG, RECORDING_CONTACT_DETAILS},
+                    new String[]{CALLING_A_VOLUNTEER, BACK});
+            mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
         } else if (animalType == 2) {
             logger.info("Запуск меню кота");
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                    new String[]{"Правила знакомства с животным", "Список документов, необходимых для того, чтобы взять животное из приюта"},
-                    new String[]{"Рекомендации по транспортировке животного", "Рекомендации по обустройству дома котенка"},
-                    new String[]{"Рекомендации по обустройству дома взрослого кота/кошки", "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями"},
-                    new String[]{"Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта", "Записать контактные данные для связи"},
-                    new String[]{"Позвать волонтера", "Назад"});
-            mailing(chatId, "Пожалуйста, выберете интересующую Вас информацию из списка ниже.", replyKeyboardMarkup);
+                    new String[]{RULES_OF_ACQUAINTANCE_WITH_ANIMALS, LIST_OF_DOCUMENTS_FOR_ANIMALS},
+                    new String[]{TRANSPORTATION_RECOMMENDATION, ARRANGEMENT_OF_THE_KITTEN},
+                    new String[]{ARRANGEMENT_OF_THE_CAT, RECOMMENDATIONS_DISABLED_CAT},
+                    new String[]{REASONS_FOR_REFUSAL_CAT, RECORDING_CONTACT_DETAILS},
+                    new String[]{CALLING_A_VOLUNTEER, BACK});
+            mailing(chatId, MENU_SELECTION, replyKeyboardMarkup);
         }
     }
 
@@ -358,6 +405,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод для атоматического послания сообщений
+     *
      */
     @Scheduled(cron = "0 21 * * * *")
     @Transactional(readOnly = true)

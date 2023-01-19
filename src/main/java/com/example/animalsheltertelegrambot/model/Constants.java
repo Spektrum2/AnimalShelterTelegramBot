@@ -78,5 +78,39 @@ public final class Constants {
      */
     public static final String REASON_FOR_REFUSAL = "Плохой запах";
     public static final String INFORMATION_ABOUT_THE_REPORT = "Пожалуйста, пришлите данные для ежедневного отчета. В отчет входят 1 - Фото животного (Отправляется отдельным сообщением) 2 - Рацион животного 3 - Общее самочувствие и привыкание к новому месту" +
-            "4 - Изменение в поведении: отказ от старых привычек, приобретение новых. Например: Корм / Хорошее, привыкание отличное / Изменений в поведении нет";
+            " 4 - Изменение в поведении: отказ от старых привычек, приобретение новых. Например: Корм / Хорошее, привыкание отличное / Изменений в поведении нет";
+    public static final String UPLOAD_PHOTO = "Пожалуйста, загрузите фотографию";
+    public static final String LOADING_THE_REPORT = "Пожалуйста, введите текст отчета";
+    public static final String START = "/start";
+    public static final String EXIT = "Выход";
+    public static final String DOG_SHELTER = "Приют для собак";
+    public static final String CAT_SHELTER = "Приют для кошек";
+    public static final String INFORMATION_SHELTER = "Узнать информацию о приюте";
+    public static final String STORY_SHELTER = "Рассказать о приюте";
+    public static final String JOB_DESCRIPTION = "Расписание работы приюта и адрес, схема проезда";
+    public static final String SAFETY = "Рекомендации о технике безопасности на территории приюта";
+    public static final String SECURITY = "Контактные данные охраны для оформления пропуска на машину";
+    public static final String CALLING_A_VOLUNTEER = "Позвать волонтера";
+    public static final String TAKE_AN_ANIMAL_FROM_A_SHELTER = "Как взять животное из приюта";
+    public static final String RULES_OF_ACQUAINTANCE_WITH_ANIMALS = "Правила знакомства с животным";
+    public static final String LIST_OF_DOCUMENTS_FOR_ANIMALS = "Список документов, необходимых для того, чтобы взять животное из приюта";
+    public static final String TRANSPORTATION_RECOMMENDATION = "Рекомендации по транспортировке животного";
+    public static final String ARRANGEMENT_OF_THE_PUPPY = "Рекомендации по обустройству дома щенка";
+    public static final String ARRANGEMENT_OF_THE_KITTEN = "Рекомендации по обустройству дома котенка";
+    public static final String ARRANGEMENT_OF_THE_DOG = "Рекомендации по обустройству дома взрослой собаки";
+    public static final String ARRANGEMENT_OF_THE_CAT = "Рекомендации по обустройству дома взрослого кота/кошки";
+    public static final String RECOMMENDATIONS = "Советы кинолога по первичному общению с собакой";
+    public static final String RECOMMENDATIONS_DOG_HANDLER = "Рекомендации по проверенным кинологам для дальнейшего обращения к собакой";
+    public static final String REASONS_FOR_REFUSAL_DOG = "Список причин, почему могут отказать в просьбе забрать собаку из приюта";
+    public static final String REASONS_FOR_REFUSAL_CAT = "Список причин, почему могут отказать в просьбе забрать кота/кошку из приюта";
+    public static final String RECORDING_CONTACT_DETAILS = "Записать контактные данные для связи";
+    public static final String RECOMMENDATIONS_DISABLED_DOG = "Рекомендаций по обустройству дома собаки с ограниченными возможностями";
+    public static final String RECOMMENDATIONS_DISABLED_CAT = "Рекомендаций по обустройству дома кота/кошки с ограниченными возможностями";
+    public static final String BACK = "Назад";
+    public static final String SEND_REPORT = "Прислать отчет о питомце";
+    public static final String GREETING = "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:";
+    public static final String GREETING_SHELTER = "Добрый день. Рады приветствовать Вас в нашем приюте.";
+    public static final String MENU_SELECTION = "Пожалуйста, выберете интересующую Вас информацию из списка ниже.";
+    public static final String EXAMPLE_OF_A_MESSAGE = "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+            "Например: +7-909-945-4367 Андрей";
 }
