@@ -41,7 +41,7 @@ public class PhotoOfAnimalService {
     /**
      * Метод для загрузки фотографии из телеграм(с сжатием) в БД
      *
-     * @param photoSize фотография
+     * @param photoSizes фотография
      * @return возвращает фография
      */
     public PhotoOfAnimal uploadPhoto(PhotoSize[] photoSizes) {
