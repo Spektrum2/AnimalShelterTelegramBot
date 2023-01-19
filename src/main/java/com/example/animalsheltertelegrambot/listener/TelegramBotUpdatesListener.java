@@ -1,13 +1,7 @@
 package com.example.animalsheltertelegrambot.listener;
 
-import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
-import com.example.animalsheltertelegrambot.model.Report;
-import com.example.animalsheltertelegrambot.model.UserData;
-import com.example.animalsheltertelegrambot.model.Volunteer;
-import com.example.animalsheltertelegrambot.repository.PhotoRepository;
-import com.example.animalsheltertelegrambot.repository.ReportRepository;
-import com.example.animalsheltertelegrambot.repository.UserRepository;
-import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
+import com.example.animalsheltertelegrambot.model.*;
+import com.example.animalsheltertelegrambot.repository.*;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -61,12 +55,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final UserRepository userRepository;
     /**
-     * Объявления сервиса для обработки фотографии животного
+     * Объявления сервисов
      */
-    private final PhotoRepository photoRepository;
     private final ReportRepository reportRepository;
     private final VolunteerRepository volunteerRepository;
     private final PhotoOfAnimalService photoOfAnimalService;
+    private final ShelterRepository shelterRepository;
 
     /**
      * Инжектим бота + репозиторий
@@ -74,16 +68,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param telegramBot          бот
      * @param userRepository       репозиторий
      * @param photoOfAnimalService обработка фотографии животного
+     * @param shelterRepository приют
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserRepository userRepository, PhotoOfAnimalService photoOfAnimalService,
+    public TelegramBotUpdatesListener(TelegramBot telegramBot,
+                                      UserRepository userRepository,
+                                      PhotoOfAnimalService photoOfAnimalService,
                                       ReportRepository reportRepository,
-                                      PhotoRepository photoRepository, VolunteerRepository volunteerRepository) {
+                                      VolunteerRepository volunteerRepository,
+                                      ShelterRepository shelterRepository) {
         this.telegramBot = telegramBot;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
-        this.photoRepository = photoRepository;
         this.photoOfAnimalService = photoOfAnimalService;
         this.volunteerRepository = volunteerRepository;
+        this.shelterRepository = shelterRepository;
     }
 
     /**
@@ -107,7 +105,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 //            Обработка сообщений пользователя
             String text = update.message().text();
             Long chatId = update.message().chat().id();
-            Integer animalType;
+            int animalType;
             if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
                 userVerification(text, chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
@@ -128,36 +126,28 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case START, EXIT -> mainMenu(chatId);
                     case DOG_SHELTER -> {
                         animalType = 1;
-                        save.put(chatId, animalType);
+                        shelterRepository.save(new Shelter(chatId, animalType));
                         shelterMenu(chatId);
                     }
                     case CAT_SHELTER -> {
                         animalType = 2;
-                        save.put(chatId, animalType);
+                        shelterRepository.save(new Shelter(chatId, animalType));
                         shelterMenu(chatId);
                     }
                     case INFORMATION_SHELTER -> infoMenu(chatId);
                     case STORY_SHELTER -> {
-                        try {
-                            if (save.get(chatId) == 1) {
+                            if (shelter(chatId).getShelter() == 1) {
                                 mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
-                            } else if (save.get(chatId) == 2) {
+                            } else if (shelter(chatId).getShelter() == 2) {
                                 mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
                             }
-                        } catch (NullPointerException e) {
-                            mainMenu(chatId);
-                        }
                     }
                     case JOB_DESCRIPTION -> {
-                        try {
-                            if (save.get(chatId) == 1) {
+                            if (shelter(chatId).getShelter() == 1) {
                                 mailing(chatId, WORKING_HOURS_DOG);
-                            } else if (save.get(chatId) == 2) {
+                            } else if (shelter(chatId).getShelter() == 2) {
                                 mailing(chatId, WORKING_HOURS_CAT);
                             }
-                        } catch (NullPointerException e) {
-                            mainMenu(chatId);
-                        }
                     }
                     case SAFETY ->
                             mailing(chatId, SECURITY_MEASURES);
@@ -165,7 +155,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     case CALLING_A_VOLUNTEER ->
                             mailing(chatId, "Переадресовываю Ваш запрос волонтеру, пожалуйста, ожидайте");
                     case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
-                        animalType = save.get(chatId);
+                        animalType = shelter(chatId).getShelter();
                         infoAboutTheAnimalMenu(chatId, animalType);
                     }
                     case RULES_OF_ACQUAINTANCE_WITH_ANIMALS -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
@@ -210,7 +200,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         if (matcher.matches()) {
             String phone = matcher.group(1);
             String name = matcher.group(3);
-            UserData userData = new UserData(id, name, phone, save.get(id));
+            UserData userData = new UserData(id, name, phone, shelter(id).getShelter());
             userRepository.save(userData);
             mailing(id, "Контактные данные сохранены!");
         }
@@ -256,7 +246,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         Pattern pattern = Pattern.compile(parseResponse);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
-            Long id = Long.valueOf(matcher.group(2));
+            long id = Long.parseLong(matcher.group(2));
             String answer = matcher.group(3);
             mailing(id, "Ответ волонетра: " + answer);
         }
@@ -293,6 +283,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public void cleanParameters(long chatId) {
         photo.remove(chatId);
         report.remove(chatId);
+    }
+
+    public Shelter shelter(long chatId) {
+        return shelterRepository.findById(chatId).orElse(null);
     }
 
     /**

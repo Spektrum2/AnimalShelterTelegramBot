@@ -28,7 +28,7 @@ CREATE TABLE animal
 CREATE TABLE user_data
 (
     id           BIGSERIAL primary key,
-    chat_id     BIGINT,
+    chat_id      BIGINT,
     name         TEXT,
     phone_number TEXT,
     shelter      INT,
@@ -62,6 +62,14 @@ CREATE TABLE report
     photo_of_animal_id BIGINT REFERENCES photo_of_animal (id)
 );
 
+-- changeset aleksandr:7
+-- preconditions onFail:MARK_RAN onError:MARK_RAN
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'shelter'
+CREATE TABLE shelter
+(
+    chat_id  BIGINT primary key,
+    shelter INT
+);
 
 
 
