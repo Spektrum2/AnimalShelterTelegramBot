@@ -20,7 +20,7 @@ public class UserData {
     /**
      * Поле id чата
      */
-    private Long idChat;
+    private Long chatId;
     /**
      * Поле login пользователя
      */
@@ -56,12 +56,12 @@ public class UserData {
     /**
      * Конструктор - создание нового объекта
      *
-     * @param idChat      id чата
+     * @param chatId     id чата
      * @param name        login пользователя
      * @param phoneNumber контактные данные пользователя
      */
-    public UserData(Long idChat, String name, String phoneNumber, Integer shelter) {
-        this.idChat = idChat;
+    public UserData(Long chatId, String name, String phoneNumber, Integer shelter) {
+        this.chatId = chatId;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.shelter = shelter;
@@ -92,21 +92,21 @@ public class UserData {
     }
 
     /**
-     * Метод получения значения поля {@link UserData#idChat}
+     * Метод получения значения поля {@link UserData#chatId}
      *
      * @return возвращает id чата
      */
-    public Long getIdChat() {
-        return idChat;
+    public Long getChatId() {
+        return chatId;
     }
 
     /**
-     * Метод изменения значения поля {@link UserData#idChat}
+     * Метод изменения значения поля {@link UserData#chatId}
      *
-     * @param idChat id чата
+     * @param chatId id чата
      */
-    public void setIdChat(Long idChat) {
-        this.idChat = idChat;
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     /**
@@ -218,7 +218,7 @@ public class UserData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserData userData = (UserData) o;
-        return Objects.equals(id, userData.id) && Objects.equals(idChat, userData.idChat) && Objects.equals(name, userData.name) && Objects.equals(phoneNumber, userData.phoneNumber);
+        return Objects.equals(id, userData.id) && Objects.equals(chatId, userData.chatId) && Objects.equals(name, userData.name) && Objects.equals(phoneNumber, userData.phoneNumber);
     }
 
     /**
@@ -228,7 +228,7 @@ public class UserData {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, idChat, name, phoneNumber);
+        return Objects.hash(id, chatId, name, phoneNumber);
     }
 
     /**
@@ -240,7 +240,7 @@ public class UserData {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", idChat=" + idChat +
+                ", idChat=" + chatId +
                 ", login='" + name + '\'' +
                 ", contactDetails='" + phoneNumber + '\'' +
                 '}';

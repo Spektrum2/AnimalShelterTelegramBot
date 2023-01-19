@@ -6,7 +6,7 @@
 CREATE TABLE volunteer
 (
     id        BIGSERIAL primary key,
-    id_chat   BIGINT,
+    chat_id   BIGINT,
     name      TEXT,
     last_name TEXT
 );
@@ -28,7 +28,7 @@ CREATE TABLE animal
 CREATE TABLE user_data
 (
     id           BIGSERIAL primary key,
-    id_chat      BIGINT,
+    chat_id     BIGINT,
     name         TEXT,
     phone_number TEXT,
     shelter      INT,

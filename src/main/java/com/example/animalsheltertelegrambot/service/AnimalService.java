@@ -41,7 +41,6 @@ public class AnimalService {
                 .map(recordMapper::toRecord)
                 .collect(Collectors.toList());
     }
-
     /**
      * Метод находит животное по id
      *

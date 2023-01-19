@@ -4,7 +4,7 @@ import javax.validation.constraints.NotBlank;
 
 public class VolunteerRecord {
     private long id;
-    private Long idChat;
+    private Long chatId;
     @NotBlank(message = "Имя волонтера должно быть заполнено!")
     private String name;
     @NotBlank(message = "Фамилия волонтера должно быть заполнено!")
@@ -35,10 +35,10 @@ public class VolunteerRecord {
     }
 
     public Long getIdChat() {
-        return idChat;
+        return chatId;
     }
 
-    public void setIdChat(Long idChat) {
-        this.idChat = idChat;
+    public void setIdChat(Long chatId) {
+        this.chatId = chatId;
     }
 }
