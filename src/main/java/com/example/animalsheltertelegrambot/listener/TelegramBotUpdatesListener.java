@@ -61,6 +61,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Хранение строки отчета
      */
     private final Map<Long, String> report = new HashMap<>();
+    private final Map<Long, Integer> button = new HashMap<>();
+
     /**
      * Объявление logger для логирования
      */
@@ -140,14 +142,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
                 setVolunteerChatId(text, chatId);
             } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
-                if (update.message().photo() != null) {
-                    photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().photo()));
-                } else if (update.message().document() != null) {
-                    photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().document()));
-                } else {
-                    report.put(chatId, text);
+                if (button.get(chatId) != null) {
+                    if (update.message().photo() != null) {
+                        photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().photo()));
+                    } else if (update.message().document() != null) {
+                        photo.put(chatId, photoOfAnimalService.uploadPhoto(update.message().document()));
+                    } else {
+                        report.put(chatId, text);
+                    }
+                    checkReport(chatId);
+                }else {
+                    mailing(chatId, STANDARD2_RESPONSE);
                 }
-                checkReport(chatId);
             } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
                 switch (text) {
                     case START -> mainMenu(chatId);
@@ -212,7 +218,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             mailing(chatId, EXAMPLE_OF_A_MESSAGE);
                     case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
-                    case SEND_REPORT -> mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
+                    case SEND_REPORT -> {
+                        button.put(chatId, 1);
+                        mailing(chatId, INFORMATION_ABOUT_THE_REPORT);
+                    }
                     default ->{
                         if (answer.get(chatId) != null) {
                             messageToTheVolunteer(chatId, text);
@@ -359,6 +368,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public void cleanParameters(long chatId) {
         photo.remove(chatId);
         report.remove(chatId);
+        button.remove(chatId);
     }
 
     public Shelter shelter(long chatId) {

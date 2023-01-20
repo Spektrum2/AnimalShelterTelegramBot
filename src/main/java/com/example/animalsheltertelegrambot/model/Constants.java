@@ -117,4 +117,5 @@ public final class Constants {
     public static final String USER_QUESTION = "Пожалуйста введите Ваш вопрос";
     public static final String CLOSE_THE_CHAT = "Закрыть чат с волонтером";
     public static final String STANDARD_RESPONSE = "К сожалению, я не знаю ответа на данный вопрос. Вы можете задать данный вопрос волонтеру через меню Позвать волонтера";
+    public static final String STANDARD2_RESPONSE = "Фотографию можно добавить только в отчет. Другие документы бот не обробатывает";
 }

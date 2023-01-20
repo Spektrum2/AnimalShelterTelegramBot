@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static com.example.animalsheltertelegrambot.model.Constants.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -43,8 +44,6 @@ class TelegramBotUpdatesListenerTest {
     @ParameterizedTest
     @MethodSource("provideParamsForMainMenu")
     public void mainMenuTest(String text) throws URISyntaxException, IOException {
-        String expected = "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:";
-
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, text);
         out.process(Collections.singletonList(update));
@@ -55,7 +54,7 @@ class TelegramBotUpdatesListenerTest {
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("reply_markup")).isNotNull();
-        assertThat(actual.getParameters().get("text")).isEqualTo(expected);
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING);
     }
 
     @Test
@@ -99,7 +98,6 @@ class TelegramBotUpdatesListenerTest {
     @ParameterizedTest
     @MethodSource("provideParamsForButtonsMainMenu")
     public void buttonsMainMenuTest(int numbers, String text) throws URISyntaxException, IOException {
-        String expected = "Добрый день. Рады приветствовать Вас в нашем приюте.";
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, text);
 
@@ -111,7 +109,7 @@ class TelegramBotUpdatesListenerTest {
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("reply_markup")).isNotNull();
-        assertThat(actual.getParameters().get("text")).isEqualTo(expected);
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
         assertThat(out.getAllMapForTests().get(update.message().chat().id())).isEqualTo(numbers);
 
     }
