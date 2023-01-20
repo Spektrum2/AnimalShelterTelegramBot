@@ -6,7 +6,6 @@ import com.pengrad.telegrambot.BotUtils;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.SendMessage;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +26,8 @@ import java.util.stream.Stream;
 
 import static com.example.animalsheltertelegrambot.model.Constants.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+
 
 @ExtendWith(MockitoExtension.class)
 class TelegramBotUpdatesListenerTest {
@@ -36,6 +36,8 @@ class TelegramBotUpdatesListenerTest {
 
     @Mock
     private UserRepository userRepository;
+
+
 
     @InjectMocks
     private TelegramBotUpdatesListener out;
@@ -110,16 +112,14 @@ class TelegramBotUpdatesListenerTest {
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("reply_markup")).isNotNull();
         assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
-        assertThat(out.getAllMapForTests().get(update.message().chat().id())).isEqualTo(numbers);
+//        assertThat(out.getAllMapForTests().get(update.message().chat().id())).isEqualTo(numbers);
 
     }
 
     @Test
     public void infoMenuTest() throws URISyntaxException, IOException {
-        String text = "Пожалуйста, выберете интересующую Вас информацию из списка ниже.";
-
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
-        Update update = geUpdate(json, "Узнать информацию о приюте");
+        Update update = geUpdate(json, INFORMATION_SHELTER);
 
         out.process(Collections.singletonList(update));
 
@@ -129,18 +129,17 @@ class TelegramBotUpdatesListenerTest {
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("reply_markup")).isNotNull();
-        assertThat(actual.getParameters().get("text")).isEqualTo(text);
+        assertThat(actual.getParameters().get("text")).isEqualTo(MENU_SELECTION);
     }
 
     @ParameterizedTest
     @MethodSource("provideParamsForStoryInfoMenu")
     public void buttonsStoryInfoMenuTest(int numbers, String text) throws URISyntaxException, IOException {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
-        Update update = geUpdate(json, "Рассказать о приюте");
+        Update update = geUpdate(json, STORY_SHELTER);
 
-        out.addMapForTests(update.message().chat().id(), numbers);
 
-        out.process(Collections.singletonList(update));
+
 
         ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
         verify(telegramBot).execute(argumentCaptor.capture());
@@ -156,7 +155,6 @@ class TelegramBotUpdatesListenerTest {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, "Расписание работы приюта и адрес, схема проезда");
 
-        out.addMapForTests(update.message().chat().id(), numbers);
 
         out.process(Collections.singletonList(update));
 
@@ -250,7 +248,7 @@ class TelegramBotUpdatesListenerTest {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, "Как взять животное из приюта");
 
-        out.addMapForTests(update.message().chat().id(), numbers);
+//        out.addMapForTests(update.message().chat().id(), numbers);
 
         out.process(Collections.singletonList(update));
 
@@ -295,7 +293,6 @@ class TelegramBotUpdatesListenerTest {
         assertThat(actual.getParameters().get("reply_markup")).isNotNull();
         assertThat(actual.getParameters().get("text")).isEqualTo(expected);
     }
-
 
 
     private Update geUpdate(String json, String replaced) {

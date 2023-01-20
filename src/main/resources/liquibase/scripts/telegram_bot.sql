@@ -64,11 +64,15 @@ CREATE TABLE report
 
 -- changeset aleksandr:7
 -- preconditions onFail:MARK_RAN onError:MARK_RAN
--- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'shelter'
-CREATE TABLE shelter
+-- precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'parameters'
+CREATE TABLE parameters
 (
     chat_id  BIGINT primary key,
-    shelter INT
+    shelter INT,
+    chat INT,
+    report INT,
+    text TEXT,
+    photo_of_animal_id BIGINT REFERENCES photo_of_animal (id)
 );
 
 
