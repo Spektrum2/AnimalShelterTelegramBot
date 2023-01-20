@@ -113,4 +113,8 @@ public final class Constants {
     public static final String MENU_SELECTION = "Пожалуйста, выберете интересующую Вас информацию из списка ниже.";
     public static final String EXAMPLE_OF_A_MESSAGE = "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
             "Например: +7-909-945-4367 Андрей";
+    public static final String START_A_CHAT = "Начать чат";
+    public static final String USER_QUESTION = "Пожалуйста введите Ваш вопрос";
+    public static final String CLOSE_THE_CHAT = "Закрыть чат с волонтером";
+    public static final String STANDARD_RESPONSE = "К сожалению, я не знаю ответа на данный вопрос. Вы можете задать данный вопрос волонтеру через меню Позвать волонтера";
 }
