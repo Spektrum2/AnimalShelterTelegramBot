@@ -328,10 +328,4 @@ public class VolunteerController {
         volunteerService.sendMessageToUser(id,number);
         return "Сообщение отправлено";
     }
-
-    @GetMapping("/user/{id}/chatId")
-    public UserRecord findUserChatId(@PathVariable Long id) {
-        return volunteerService.findUserByChatId(id);
-    }
-
 }

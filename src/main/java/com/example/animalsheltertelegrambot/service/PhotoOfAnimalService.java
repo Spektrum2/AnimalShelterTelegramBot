@@ -3,7 +3,6 @@ package com.example.animalsheltertelegrambot.service;
 import com.example.animalsheltertelegrambot.exception.PhotoNotFoundException;
 import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
 import com.example.animalsheltertelegrambot.repository.PhotoRepository;
-import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Document;
 import com.pengrad.telegrambot.model.PhotoSize;
@@ -30,12 +29,11 @@ public class PhotoOfAnimalService {
     private String photoDir;
     private final TelegramBot telegramBot;
     private final PhotoRepository photoRepository;
-    private final ReportRepository reportRepository;
 
-    public PhotoOfAnimalService(TelegramBot telegramBot, PhotoRepository photoRepository, ReportRepository reportRepository) {
+    public PhotoOfAnimalService(TelegramBot telegramBot,
+                                PhotoRepository photoRepository) {
         this.telegramBot = telegramBot;
         this.photoRepository = photoRepository;
-        this.reportRepository = reportRepository;
     }
 
     /**
@@ -75,18 +73,22 @@ public class PhotoOfAnimalService {
     public PhotoOfAnimal uploadPhoto(Document document) {
         logger.info("Was invoked method for upload photo from document");
         try {
-            GetFileResponse getFileResponse = telegramBot.execute(new GetFile(document.fileId()));
-            byte[] data = telegramBot.getFileContent(getFileResponse.file());
-            String filePath = getFileResponse.file().filePath();
-            String extension = filePath.substring(filePath.lastIndexOf('.'));
-            PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), data);
-            Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
-            Files.createDirectories(path.getParent());
-            Files.deleteIfExists(path);
-            Files.write(path, data);
-            photoOfAnimal.setMediaType(Files.probeContentType(path));
-            photoOfAnimal.setFilePath(path.toString());
-            return photoRepository.save(photoOfAnimal);
+            if (document.mimeType().equals("image/jpeg") || document.mimeType().equals("image/png")) {
+                GetFileResponse getFileResponse = telegramBot.execute(new GetFile(document.fileId()));
+                byte[] data = telegramBot.getFileContent(getFileResponse.file());
+                String filePath = getFileResponse.file().filePath();
+                String extension = filePath.substring(filePath.lastIndexOf('.'));
+                PhotoOfAnimal photoOfAnimal = createPhoto(document.fileSize(), data);
+                Path path = Paths.get(photoDir).resolve(photoOfAnimal.getId() + extension);
+                Files.createDirectories(path.getParent());
+                Files.deleteIfExists(path);
+                Files.write(path, data);
+                photoOfAnimal.setMediaType(document.mimeType());
+                photoOfAnimal.setFilePath(path.toString());
+                return photoRepository.save(photoOfAnimal);
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -96,8 +98,8 @@ public class PhotoOfAnimalService {
     /**
      * Метод для создания фотографии
      *
-     * @param size      размер фотографии
-     * @param data      информация о файле
+     * @param size размер фотографии
+     * @param data информация о файле
      * @return возвращает фотографию
      */
     public PhotoOfAnimal createPhoto(long size, byte[] data) {

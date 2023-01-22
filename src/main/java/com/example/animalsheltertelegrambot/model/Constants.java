@@ -77,8 +77,8 @@ public final class Constants {
      * Список причин, почему могут отказать в просьбе забрать собаку или кота/кошку из приюта
      */
     public static final String REASON_FOR_REFUSAL = "Плохой запах";
-    public static final String INFORMATION_ABOUT_THE_REPORT = "Пожалуйста, пришлите данные для ежедневного отчета. В отчет входят 1 - Фото животного (Отправляется отдельным сообщением) 2 - Рацион животного 3 - Общее самочувствие и привыкание к новому месту" +
-            " 4 - Изменение в поведении: отказ от старых привычек, приобретение новых. Например: Корм / Хорошее, привыкание отличное / Изменений в поведении нет";
+    public static final String INFORMATION_ABOUT_THE_REPORT = "Пожалуйста, пришлите данные для ежедневного отчета." + "\n" + "В отчет входят:"+ "\n" + "1 - Фото животного (Отправляется отдельным сообщением)" + "\n" +  "2 - Рацион животного" + "\n" + "3 - Общее самочувствие и привыкание к новому месту" + "\n" +
+            "4 - Изменение в поведении: отказ от старых привычек, приобретение новых." + "\n" +"Например: Корм / Хорошее, привыкание отличное / Изменений в поведении нет";
     public static final String UPLOAD_PHOTO = "Пожалуйста, загрузите фотографию";
     public static final String LOADING_THE_REPORT = "Пожалуйста, введите текст отчета";
     public static final String START = "/start";
@@ -111,11 +111,17 @@ public final class Constants {
     public static final String GREETING = "Добрый день. Наш бот помогает найти новый дом брошенным животным. Пожалуйста, выберете интересующий Вас приют из меню ниже:";
     public static final String GREETING_SHELTER = "Добрый день. Рады приветствовать Вас в нашем приюте.";
     public static final String MENU_SELECTION = "Пожалуйста, выберете интересующую Вас информацию из списка ниже.";
-    public static final String EXAMPLE_OF_A_MESSAGE = "Пожалуйста, введите сообщение в формате номер телефона + имя. " +
+    public static final String EXAMPLE_OF_A_MESSAGE = "Пожалуйста, введите сообщение в формате номер телефона + имя. " + "\n" +
             "Например: +7-909-945-4367 Андрей";
     public static final String START_A_CHAT = "Начать чат";
     public static final String USER_QUESTION = "Пожалуйста введите Ваш вопрос";
     public static final String CLOSE_THE_CHAT = "Закрыть чат с волонтером";
     public static final String STANDARD_RESPONSE = "К сожалению, я не знаю ответа на данный вопрос. Вы можете задать данный вопрос волонтеру через меню Позвать волонтера";
     public static final String STANDARD2_RESPONSE = "Фотографию можно добавить только в отчет. Другие документы бот не обробатывает";
+    public static final String STANDARD3_RESPONSE = "Неправильно написан отчет." + "\n" +"Шаблон отчета: Корм / Хорошее, привыкание отличное / Изменений в поведении нет" + "\n" + "Если текс отчета вы уже отправили, отправте фотографию";
+    public static final String STANDARD4_RESPONSE = "Не правильно введены данные" + "\n" +
+            "Шаблон: +7-909-945-4367 Андрей";
+    public static final String CLOSE_THE_REPORT = "Выйти из отправки отчета";
+    public static final String CLOSE_THE_ADD_USER = "Выйти из записи контактных данных";
+    public static final String FIND_USER = "Вы еще не взяли животное из приюта";
 }

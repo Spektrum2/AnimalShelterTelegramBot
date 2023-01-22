@@ -11,6 +11,7 @@ public class Parameters {
     private int shelter;
     private int chat;
     private int report;
+    private int add;
     private String text;
     @OneToOne
     private PhotoOfAnimal photoOfAnimal;
@@ -69,5 +70,13 @@ public class Parameters {
 
     public void setPhotoOfAnimal(PhotoOfAnimal photoOfAnimal) {
         this.photoOfAnimal = photoOfAnimal;
+    }
+
+    public int getAdd() {
+        return add;
+    }
+
+    public void setAdd(int add) {
+        this.add = add;
     }
 }

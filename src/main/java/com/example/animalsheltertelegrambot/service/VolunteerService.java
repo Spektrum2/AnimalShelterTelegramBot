@@ -313,11 +313,6 @@ public class VolunteerService {
             throw new Number2NotFoundException();
         }
     }
-
-    public UserRecord findUserByChatId(long chatId) {
-        return recordMapper.toRecord(userRepository.findByChatId(chatId));
-
-    }
 }
 
 
