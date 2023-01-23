@@ -587,7 +587,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @Scheduled(cron = "0 21 * * * *")
     @Transactional(readOnly = true)
     public void warning() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).plusDays(3);
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
         userRepository.findAll().stream()
                 .map(UserData::getReports)
