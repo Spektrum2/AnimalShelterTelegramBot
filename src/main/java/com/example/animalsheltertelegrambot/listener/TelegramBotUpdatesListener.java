@@ -121,150 +121,152 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             String text = update.message().text();
             Long chatId = update.message().chat().id();
-            if (update.message() != null && update.message().photo() == null && update.message().document() == null && update.message().sticker() == null && text.matches(parsePhone)) {
-                userVerification(text, chatId);
-            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && update.message().sticker() == null && text.matches(parseResponse)) {
-                responseToTheUser(text);
-            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && update.message().sticker() == null && text.matches(parseIdText)) {
-                setVolunteerChatId(text, chatId);
-            } else if (update.message() != null && update.message().sticker() == null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
-                createReport(update.message().photo(), update.message().document(), text, chatId);
-            } else if (update.message() != null && update.message().sticker() != null) {
-                mailing(chatId, GET_STICKER);
-            } else if (update.message() != null && update.message().photo() == null && update.message().sticker() == null && update.message().document() == null) {
-                switch (text) {
-                    case START -> mainMenu(chatId);
-                    case EXIT -> mainMenu(chatId);
-                    case DOG_SHELTER -> {
-                        parametersRepository.save(new Parameters(chatId, 1));
-                        shelterMenu(chatId);
-                    }
-                    case CAT_SHELTER -> {
-                        parametersRepository.save(new Parameters(chatId, 2));
-                        shelterMenu(chatId);
-                    }
-                    case INFORMATION_SHELTER -> infoMenu(chatId);
-                    case STORY_SHELTER -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            if (parameters.getShelter() == 1) {
-                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
-                            } else if (parameters.getShelter() == 2) {
-                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
-                            }
-                        } else {
-                            mainMenu(chatId);
-                        }
-                    }
-                    case JOB_DESCRIPTION -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            if (parameters.getShelter() == 1) {
-                                mailing(chatId, WORKING_HOURS_DOG);
-                            } else if (parameters.getShelter() == 2) {
-                                mailing(chatId, WORKING_HOURS_CAT);
-                            }
-                        } else {
-                            mainMenu(chatId);
-                        }
-                    }
-                    case SAFETY -> mailing(chatId, SECURITY_MEASURES);
-                    case SECURITY -> mailing(chatId, SECURITY_DATA);
-                    case CALLING_A_VOLUNTEER -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            parameters.setChat(1);
-                            parametersRepository.save(parameters);
-                            callingVolunteer(chatId);
-                        } else {
-                            mainMenu(chatId);
-                        }
-                    }
-                    case CLOSE_THE_CHAT -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            parameters.setChat(0);
-                            parametersRepository.save(parameters);
+            try {
+                if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
+                    userVerification(text, chatId);
+                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
+                    responseToTheUser(text);
+                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
+                    setVolunteerChatId(text, chatId);
+                } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
+                    createReport(update.message().photo(), update.message().document(), text, chatId);
+                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
+                    switch (text) {
+                        case START -> mainMenu(chatId);
+                        case EXIT -> mainMenu(chatId);
+                        case DOG_SHELTER -> {
+                            parametersRepository.save(new Parameters(chatId, 1));
                             shelterMenu(chatId);
-                        } else {
-                            mainMenu(chatId);
                         }
-                    }
-                    case BACK -> shelterMenu(chatId);
-                    case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            infoAboutTheAnimalMenu(chatId, parameters.getShelter());
-                        } else {
-                            mainMenu(chatId);
+                        case CAT_SHELTER -> {
+                            parametersRepository.save(new Parameters(chatId, 2));
+                            shelterMenu(chatId);
                         }
-                    }
-                    case RULES_OF_ACQUAINTANCE_WITH_ANIMALS -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
-                    case LIST_OF_DOCUMENTS_FOR_ANIMALS -> mailing(chatId, LIST_OF_DOCUMENTS);
-                    case TRANSPORTATION_RECOMMENDATION -> mailing(chatId, ANIMAL_TRANSPORTATION);
-                    case ARRANGEMENT_OF_THE_PUPPY, ARRANGEMENT_OF_THE_KITTEN -> mailing(chatId, ANIMAL_ADAPTATION);
-                    case ARRANGEMENT_OF_THE_DOG, ARRANGEMENT_OF_THE_CAT -> mailing(chatId, ADULT_ANIMAL_ADAPTATION);
-                    case RECOMMENDATIONS -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
-                    case RECOMMENDATIONS_DOG_HANDLER -> mailing(chatId, RECOMMENDATION_FOR_DOG_HANDLERS);
-                    case REASONS_FOR_REFUSAL_DOG, REASONS_FOR_REFUSAL_CAT -> mailing(chatId, REASON_FOR_REFUSAL);
-                    case RECORDING_CONTACT_DETAILS -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            parameters.setAdd(1);
-                            parametersRepository.save(parameters);
-                            menuAddUser(chatId);
-                        } else {
-                            mainMenu(chatId);
-                        }
-                    }
-                    case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
-                            mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
-                    case SEND_REPORT -> {
-                        UserData userData = userRepository.findAll().stream()
-                                .filter(user -> Objects.equals(user.getChatId(), chatId) && user.getAnimal() != null)
-                                .findFirst()
-                                .orElse(null);
-                        if (userData != null) {
+                        case INFORMATION_SHELTER -> infoMenu(chatId);
+                        case STORY_SHELTER -> {
                             Parameters parameters = parameters(chatId);
                             if (parameters != null) {
-                                parameters.setReport(1);
-                                parametersRepository.save(parameters);
-                                menuReport(chatId);
+                                if (parameters.getShelter() == 1) {
+                                    mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
+                                } else if (parameters.getShelter() == 2) {
+                                    mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
+                                }
                             } else {
                                 mainMenu(chatId);
                             }
-                        } else {
-                            mailing(chatId, FIND_USER);
                         }
-                    }
-                    case CLOSE_THE_REPORT -> cleanParameters(chatId);
-                    case CLOSE_THE_ADD_USER -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            parameters.setAdd(0);
-                            parametersRepository.save(parameters);
-                            shelterMenu(chatId);
-                        } else {
-                            mainMenu(chatId);
-                        }
-                    }
-                    default -> {
-                        Parameters parameters = parameters(chatId);
-                        if (parameters != null) {
-                            if (parameters.getChat() == 1) {
-                                messageToTheVolunteer(chatId, text);
-                            } else if (parameters.getAdd() == 1) {
-                                mailing(chatId, STANDARD4_RESPONSE);
-                            } else if (parameters.getReport() == 1) {
-                                mailing(chatId, STANDARD3_RESPONSE);
+                        case JOB_DESCRIPTION -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                if (parameters.getShelter() == 1) {
+                                    mailing(chatId, WORKING_HOURS_DOG);
+                                } else if (parameters.getShelter() == 2) {
+                                    mailing(chatId, WORKING_HOURS_CAT);
+                                }
                             } else {
-                                mailing(chatId, STANDARD_RESPONSE);
+                                mainMenu(chatId);
                             }
-                        } else {
-                            mainMenu(chatId);
+                        }
+                        case SAFETY -> mailing(chatId, SECURITY_MEASURES);
+                        case SECURITY -> mailing(chatId, SECURITY_DATA);
+                        case CALLING_A_VOLUNTEER -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                parameters.setChat(1);
+                                parametersRepository.save(parameters);
+                                callingVolunteer(chatId);
+                            } else {
+                                mainMenu(chatId);
+                            }
+                        }
+                        case CLOSE_THE_CHAT -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                parameters.setChat(0);
+                                parametersRepository.save(parameters);
+                                shelterMenu(chatId);
+                            } else {
+                                mainMenu(chatId);
+                            }
+                        }
+                        case BACK -> shelterMenu(chatId);
+                        case TAKE_AN_ANIMAL_FROM_A_SHELTER -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                infoAboutTheAnimalMenu(chatId, parameters.getShelter());
+                            } else {
+                                mainMenu(chatId);
+                            }
+                        }
+                        case RULES_OF_ACQUAINTANCE_WITH_ANIMALS -> mailing(chatId, RULES_FOR_GETTING_TO_KNOW_AN_ANIMAL);
+                        case LIST_OF_DOCUMENTS_FOR_ANIMALS -> mailing(chatId, LIST_OF_DOCUMENTS);
+                        case TRANSPORTATION_RECOMMENDATION -> mailing(chatId, ANIMAL_TRANSPORTATION);
+                        case ARRANGEMENT_OF_THE_PUPPY, ARRANGEMENT_OF_THE_KITTEN -> mailing(chatId, ANIMAL_ADAPTATION);
+                        case ARRANGEMENT_OF_THE_DOG, ARRANGEMENT_OF_THE_CAT -> mailing(chatId, ADULT_ANIMAL_ADAPTATION);
+                        case RECOMMENDATIONS -> mailing(chatId, TIPS_FROM_DOG_HANDLER);
+                        case RECOMMENDATIONS_DOG_HANDLER -> mailing(chatId, RECOMMENDATION_FOR_DOG_HANDLERS);
+                        case REASONS_FOR_REFUSAL_DOG, REASONS_FOR_REFUSAL_CAT -> mailing(chatId, REASON_FOR_REFUSAL);
+                        case RECORDING_CONTACT_DETAILS -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                parameters.setAdd(1);
+                                parametersRepository.save(parameters);
+                                menuAddUser(chatId);
+                            } else {
+                                mainMenu(chatId);
+                            }
+                        }
+                        case RECOMMENDATIONS_DISABLED_DOG, RECOMMENDATIONS_DISABLED_CAT ->
+                                mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
+                        case SEND_REPORT -> {
+                            UserData userData = userRepository.findAll().stream()
+                                    .filter(user -> Objects.equals(user.getChatId(), chatId) && user.getAnimal() != null)
+                                    .findFirst()
+                                    .orElse(null);
+                            if (userData != null) {
+                                Parameters parameters = parameters(chatId);
+                                if (parameters != null) {
+                                    parameters.setReport(1);
+                                    parametersRepository.save(parameters);
+                                    menuReport(chatId);
+                                } else {
+                                    mainMenu(chatId);
+                                }
+                            } else {
+                                mailing(chatId, FIND_USER);
+                            }
+                        }
+                        case CLOSE_THE_REPORT -> cleanParameters(chatId);
+                        case CLOSE_THE_ADD_USER -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                parameters.setAdd(0);
+                                parametersRepository.save(parameters);
+                                shelterMenu(chatId);
+                            } else {
+                                mainMenu(chatId);
+                            }
+                        }
+                        default -> {
+                            Parameters parameters = parameters(chatId);
+                            if (parameters != null) {
+                                if (parameters.getChat() == 1) {
+                                    messageToTheVolunteer(chatId, text);
+                                } else if (parameters.getAdd() == 1) {
+                                    mailing(chatId, STANDARD4_RESPONSE);
+                                } else if (parameters.getReport() == 1) {
+                                    mailing(chatId, STANDARD3_RESPONSE);
+                                } else {
+                                    mailing(chatId, STANDARD_RESPONSE);
+                                }
+                            } else {
+                                mainMenu(chatId);
+                            }
                         }
                     }
                 }
+            } catch (NullPointerException e) {
+                mailing(chatId, GET_STICKER);
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
