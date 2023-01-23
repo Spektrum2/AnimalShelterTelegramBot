@@ -240,7 +240,7 @@ public class UserData {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", idChat=" + chatId +
+                ", chatID=" + chatId +
                 ", login='" + name + '\'' +
                 ", contactDetails='" + phoneNumber + '\'' +
                 '}';

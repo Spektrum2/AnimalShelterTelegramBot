@@ -129,7 +129,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 setVolunteerChatId(text, chatId);
             } else if (update.message() != null && update.message().sticker() == null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
                 createReport(update.message().photo(), update.message().document(), text, chatId);
-            } else if (update.message() != null && update.message().photo() == null && update.message().sticker() == null &&  update.message().document() == null) {
+            } else if (update.message() != null && update.message().sticker() != null) {
+                mailing(chatId, GET_STICKER);
+            } else if (update.message() != null && update.message().photo() == null && update.message().sticker() == null && update.message().document() == null) {
                 switch (text) {
                     case START -> mainMenu(chatId);
                     case EXIT -> mainMenu(chatId);
@@ -219,7 +221,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             mailing(chatId, ADAPTATION_OF_AN_ANIMAL_WITH_DISABILITIES);
                     case SEND_REPORT -> {
                         UserData userData = userRepository.findAll().stream()
-                                .filter(user -> user != null && Objects.equals(user.getChatId(), chatId) && user.getAnimal() != null)
+                                .filter(user -> Objects.equals(user.getChatId(), chatId) && user.getAnimal() != null)
                                 .findFirst()
                                 .orElse(null);
                         if (userData != null) {
@@ -236,7 +238,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         }
                     }
                     case CLOSE_THE_REPORT -> cleanParameters(chatId);
-                    case CLOSE_THE_ADD_USER ->{
+                    case CLOSE_THE_ADD_USER -> {
                         Parameters parameters = parameters(chatId);
                         if (parameters != null) {
                             parameters.setAdd(0);
@@ -583,7 +585,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @Scheduled(cron = "0 21 * * * *")
     @Transactional(readOnly = true)
     public void warning() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).plusDays(3);
 
         userRepository.findAll().stream()
                 .map(UserData::getReports)
@@ -610,8 +612,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
 
         userRepository.findAll().stream()
-                .filter(user -> user.getDate() != null && user.getDate().toLocalDate().equals(now.toLocalDate()))
+                .filter(user -> user != null && user.getDate().toLocalDate().equals(now.toLocalDate()))
                 .map(UserData::getAnimal)
-                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "У пользователя с животным id - " + animal.getId() + "закончился испытательный период")));
+                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "У пользователя с животным id - " + animal.getId() + " закончился испытательный период")));
     }
 }

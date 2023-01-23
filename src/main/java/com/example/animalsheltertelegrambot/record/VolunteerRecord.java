@@ -38,7 +38,7 @@ public class VolunteerRecord {
         return chatId;
     }
 
-    public void setIdChat(Long chatId) {
+    public void setChatId(Long chatId) {
         this.chatId = chatId;
     }
 }

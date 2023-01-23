@@ -174,6 +174,7 @@ public class Volunteer {
                 "id=" + id +
                 ", volunteerName='" + name + '\'' +
                 ", volunteerLastName='" + lastName + '\'' +
+                ", chatId='" + chatId + '\'' +
                 '}';
     }
 }

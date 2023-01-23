@@ -34,7 +34,7 @@ public class RecordMapper {
     public VolunteerRecord toRecord(Volunteer volunteer) {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
         volunteerRecord.setId(volunteer.getId());
-        volunteerRecord.setIdChat(volunteer.getChatId());
+        volunteerRecord.setChatId(volunteer.getChatId());
         volunteerRecord.setName(volunteer.getName());
         volunteerRecord.setLastName(volunteer.getLastName());
         return volunteerRecord;
@@ -86,7 +86,7 @@ public class RecordMapper {
 
     public UserData toEntity(UserRecord userRecord) {
         UserData userData = new UserData();
-        userData.setChatId(userRecord.getIdChat());
+        userData.setChatId(userRecord.getChatId());
         userData.setName(userRecord.getName());
         userData.setPhoneNumber(userRecord.getPhoneNumber());
         userData.setShelter(userRecord.getShelter());

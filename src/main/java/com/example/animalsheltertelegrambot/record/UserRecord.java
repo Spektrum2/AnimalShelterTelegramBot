@@ -19,12 +19,12 @@ public class UserRecord {
         this.id = id;
     }
 
-    public Long getIdChat() {
+    public Long getChatId() {
         return chatId;
     }
 
     public void setChatId(Long chatId) {
-        this.chatId = this.chatId;
+        this.chatId = chatId;
     }
 
     public String getName() {

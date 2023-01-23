@@ -263,7 +263,7 @@ public class VolunteerControllerTest {
 
     private VolunteerRecord generateVolunteer() {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
-        volunteerRecord.setIdChat(faker.number().randomNumber());
+        volunteerRecord.setChatId(faker.number().randomNumber());
         volunteerRecord.setName(faker.name().firstName());
         volunteerRecord.setLastName(faker.name().lastName());
         return volunteerRecord;
