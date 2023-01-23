@@ -1,10 +1,8 @@
 package com.example.animalsheltertelegrambot.listener;
 
-import com.example.animalsheltertelegrambot.model.Parameters;
-import com.example.animalsheltertelegrambot.model.PhotoOfAnimal;
-import com.example.animalsheltertelegrambot.model.UserData;
-import com.example.animalsheltertelegrambot.model.Volunteer;
+import com.example.animalsheltertelegrambot.model.*;
 import com.example.animalsheltertelegrambot.repository.ParametersRepository;
+import com.example.animalsheltertelegrambot.repository.ReportRepository;
 import com.example.animalsheltertelegrambot.repository.UserRepository;
 import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
@@ -51,6 +49,9 @@ class TelegramBotUpdatesListenerTest {
     @Mock
     private PhotoOfAnimalService photoOfAnimalService;
 
+    @Mock
+    private ReportRepository reportRepository;
+
     @InjectMocks
     private TelegramBotUpdatesListener out;
 
@@ -78,14 +79,15 @@ class TelegramBotUpdatesListenerTest {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, "+7-923-456-2345 Петя");
         Parameters parameters = new Parameters(update.message().chat().id(), numbers);
+        parameters.setAdd(1);
 
         when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
 
         out.process(Collections.singletonList(update));
 
-        ArgumentCaptor<SendMessage> sendMessageArgumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(telegramBot).execute(sendMessageArgumentCaptor.capture());
-        SendMessage actualSendMessage = sendMessageArgumentCaptor.getValue();
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot, times(2)).execute(argumentCaptor.capture());
+        SendMessage actualSendMessage = argumentCaptor.getValue();
 
         ArgumentCaptor<UserData> userArgumentCaptor = ArgumentCaptor.forClass(UserData.class);
         verify(userRepository).save(userArgumentCaptor.capture());
@@ -96,7 +98,7 @@ class TelegramBotUpdatesListenerTest {
         assertThat(actualUser.getPhoneNumber()).isEqualTo("+7-923-456-2345");
 
         assertThat(actualSendMessage.getParameters().get("chat_id")).isEqualTo(123L);
-        assertThat(actualSendMessage.getParameters().get("text")).isEqualTo("Контактные данные сохранены!");
+        assertThat(actualSendMessage.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
     }
 
     @Test
@@ -169,6 +171,49 @@ class TelegramBotUpdatesListenerTest {
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("text")).isEqualTo(STANDARD_RESPONSE);
 
+    }
+
+    @Test
+    public void default1Test() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, "Вопрос");
+        Parameters parameters = new Parameters();
+        parameters.setChatId(update.message().chat().id());
+        parameters.setAdd(1);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(STANDARD4_RESPONSE);
+    }
+
+    @Test
+    public void default2Test() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, "Вопрос");
+        Parameters parameters = new Parameters();
+        parameters.setChatId(update.message().chat().id());
+        parameters.setReport(1);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(STANDARD3_RESPONSE);
     }
 
     @ParameterizedTest
@@ -253,6 +298,7 @@ class TelegramBotUpdatesListenerTest {
     public void buttonSafeInfoMenuTest() throws URISyntaxException, IOException {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, SAFETY);
+
         out.process(Collections.singletonList(update));
 
         ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
@@ -279,10 +325,16 @@ class TelegramBotUpdatesListenerTest {
         assertThat(actual.getParameters().get("text")).isEqualTo(SECURITY_DATA);
     }
 
-    @Test
+   @Test
     public void buttonDataTest() throws URISyntaxException, IOException {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, RECORDING_CONTACT_DETAILS);
+        Parameters parameters = new Parameters();
+        parameters.setChatId(update.message().chat().id());
+        parameters.setAdd(1);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
         out.process(Collections.singletonList(update));
 
         ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
@@ -356,33 +408,20 @@ class TelegramBotUpdatesListenerTest {
         userData.setChatId(update.message().chat().id());
         userData.setName("Петя");
         userData.setPhoneNumber("+7-923-456-2345");
+        Parameters parameters = new Parameters();
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
 
         when(userRepository.findByChatId(update.message().chat().id())).thenReturn(userData);
 
         out.userVerification(update.message().text(), update.message().chat().id());
 
         ArgumentCaptor<SendMessage> sendMessageArgumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(telegramBot).execute(sendMessageArgumentCaptor.capture());
+        verify(telegramBot, times(2)).execute(sendMessageArgumentCaptor.capture());
         SendMessage actual = sendMessageArgumentCaptor.getValue();
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
-        assertThat(actual.getParameters().get("text")).isEqualTo("Вы уже внесли контактные данные");
-    }
-
-    @Test
-    public void chatMenu() throws URISyntaxException, IOException {
-        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
-        Update update = geUpdate(json, CALLING_A_VOLUNTEER);
-
-        out.process(Collections.singletonList(update));
-
-        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(telegramBot).execute(argumentCaptor.capture());
-        SendMessage actual = argumentCaptor.getValue();
-
-        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
-        assertThat(actual.getParameters().get("reply_markup")).isNotNull();
-        assertThat(actual.getParameters().get("text")).isEqualTo("Хотите задать вопрос волонтеру?");
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
     }
 
     @ParameterizedTest
@@ -411,6 +450,14 @@ class TelegramBotUpdatesListenerTest {
         Update update = geUpdate(json, SEND_REPORT);
         Parameters parameters = new Parameters();
         parameters.setReport(1);
+        Animal animal = new Animal();
+        UserData userData = new UserData();
+        userData.setChatId(update.message().chat().id());
+        userData.setAnimal(animal);
+        List<UserData> users = new ArrayList<>();
+        users.add(userData);
+
+        when(userRepository.findAll()).thenReturn(users);
 
         when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
 
@@ -422,6 +469,55 @@ class TelegramBotUpdatesListenerTest {
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("text")).isEqualTo(INFORMATION_ABOUT_THE_REPORT);
+    }
+
+    @Test
+    public void negativeSendReportTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, SEND_REPORT);
+        Parameters parameters = new Parameters();
+        parameters.setReport(1);
+        UserData userData = new UserData();
+        userData.setChatId(update.message().chat().id());
+        List<UserData> users = new ArrayList<>();
+        users.add(userData);
+
+        when(userRepository.findAll()).thenReturn(users);
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(FIND_USER);
+    }
+    @Test
+    public void negative2SendReportTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, SEND_REPORT);
+        Parameters parameters = new Parameters();
+        parameters.setReport(1);
+        Animal animal = new Animal();
+        UserData userData = new UserData();
+        userData.setChatId(update.message().chat().id());
+        userData.setAnimal(animal);
+        List<UserData> users = new ArrayList<>();
+        users.add(userData);
+
+        when(userRepository.findAll()).thenReturn(users);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.empty());
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING);
     }
 
     @Test
@@ -521,9 +617,28 @@ class TelegramBotUpdatesListenerTest {
     }
 
     @Test
+    public void negativeReportPhotoTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("photo.json")).toURI()));
+        Update update = geUpdate(json, "AgADAgADw6gxG_mCPAjHE7knq2P_UUJfLyLw4AAgI");
+        Parameters parameters = new Parameters();
+        parameters.setReport(0);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(STANDARD2_RESPONSE);
+    }
+
+    @Test
     public void reportDocumentTest() throws URISyntaxException, IOException {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("document.json")).toURI()));
-        Update update = geUpdate(json, "AgADAgADw6gxG_mCPAjHE7knq2P_UUJfLyLw4AAgI");
+        Update update = geUpdate(json, "image/jpeg");
         Parameters parameters = new Parameters();
         PhotoOfAnimal photoOfAnimal = new PhotoOfAnimal();
         photoOfAnimal.setId(1);
@@ -542,6 +657,26 @@ class TelegramBotUpdatesListenerTest {
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
         assertThat(actual.getParameters().get("text")).isEqualTo(LOADING_THE_REPORT);
+    }
+    @Test
+    public void negativeReportDocumentTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("document.json")).toURI()));
+        Update update = geUpdate(json, "image/jpeg");
+        Parameters parameters = new Parameters();
+        parameters.setReport(1);
+
+        when(photoOfAnimalService.uploadPhoto(update.message().document())).thenReturn(null);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo("Неправильный формат. Пришлите фотографию с форматом jpeg или png");
     }
 
     @Test
@@ -549,12 +684,8 @@ class TelegramBotUpdatesListenerTest {
         String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
         Update update = geUpdate(json, "Корм / Хорошее, привыкание отличное / Изменений в поведении нет");
         Parameters parameters = new Parameters();
-        PhotoOfAnimal photoOfAnimal = new PhotoOfAnimal();
-        photoOfAnimal.setId(1);
         parameters.setReport(1);
-        parameters.setPhotoOfAnimal(photoOfAnimal);
-
-        when(photoOfAnimalService.uploadPhoto(update.message().document())).thenReturn(photoOfAnimal);
+        parameters.setText("Корм / Хорошее, привыкание отличное / Изменений в поведении нет");
 
         when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
 
@@ -565,36 +696,93 @@ class TelegramBotUpdatesListenerTest {
         SendMessage actual = argumentCaptor.getValue();
 
         assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
-        assertThat(actual.getParameters().get("text")).isEqualTo(LOADING_THE_REPORT);
+        assertThat(actual.getParameters().get("text")).isEqualTo(UPLOAD_PHOTO);
     }
 
+    @Test
+    public void reportTextAndPhotoTest() throws URISyntaxException, IOException {
+        String json1 = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update1 = geUpdate(json1, "Корм / Хорошее, привыкание отличное / Изменений в поведении нет");
+        String json2 = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("document.json")).toURI()));
+        Update update2 = geUpdate(json2, "AgADAgADw6gxG_mCPAjHE7knq2P_UUJfLyLw4AAgI");
+        Parameters parameters = new Parameters();
+        PhotoOfAnimal photoOfAnimal = new PhotoOfAnimal();
+        photoOfAnimal.setId(1);
+        Report report = new Report();
+        report.setPhotoOfAnimal(photoOfAnimal);
+        parameters.setReport(1);
+        parameters.setPhotoOfAnimal(photoOfAnimal);
 
-//    @Test
-//    public void warningTest() {
-//        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(2);
-//        Volunteer volunteer = new Volunteer();
-//        volunteer.setChatId(456L);
-//        Animal animal = new Animal();
-//        animal.setVolunteer(volunteer);
-//        UserData userData = new UserData();
-//        userData.setAnimal(animal);
-//        userData.setChatId(123L);
-//        Report report = new Report();
-//        report.setDate(now);
-//        report.setUserData(userData);
-//        List<UserData> users = new ArrayList<>();
-//        users.add(userData);
-//
-//        when(userRepository.findAll()).thenReturn(users);
-//
-//        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
-//        verify(telegramBot).execute(argumentCaptor.capture());
-//        SendMessage actual = argumentCaptor.getValue();
-//
-//        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
-//        assertThat(actual.getParameters().get("text")).isEqualTo("Сделайте отчет");
-//
-//    }
+        when(photoOfAnimalService.uploadPhoto(update2.message().document())).thenReturn(photoOfAnimal);
+
+        when(reportRepository.save(any())).thenReturn(report);
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+        out.process(Collections.singletonList(update2));
+
+        out.process(Collections.singletonList(update1));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot, times(3)).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
+    }
+
+    @Test
+    public void closeReportTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, CLOSE_THE_REPORT);
+        Parameters parameters = new Parameters();
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("reply_markup")).isNotNull();
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
+    }
+
+    @Test
+    public void closeAddUser() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("message.json")).toURI()));
+        Update update = geUpdate(json, CLOSE_THE_ADD_USER);
+        Parameters parameters = new Parameters();
+
+        when(parametersRepository.findById(any())).thenReturn(Optional.of(parameters));
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("reply_markup")).isNotNull();
+        assertThat(actual.getParameters().get("text")).isEqualTo(GREETING_SHELTER);
+    }
+
+    @Test
+    public void stickerTest() throws URISyntaxException, IOException {
+        String json = Files.readString(Paths.get(Objects.requireNonNull(TelegramBotUpdatesListenerTest.class.getResource("sticker.json")).toURI()));
+        Update update = geUpdate(json, "AgADAgADw6gxG_mCPAjHE7knq2P_UUJfLyLw4AAgI");
+
+        out.process(Collections.singletonList(update));
+
+        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(telegramBot).execute(argumentCaptor.capture());
+        SendMessage actual = argumentCaptor.getValue();
+
+        assertThat(actual.getParameters().get("chat_id")).isEqualTo(123L);
+        assertThat(actual.getParameters().get("text")).isEqualTo(GET_STICKER);
+    }
 
     private Update geUpdate(String json, String replaced) {
         return BotUtils.fromJson(json.replace("%command%", replaced), Update.class);
@@ -655,7 +843,7 @@ class TelegramBotUpdatesListenerTest {
 
     public static Stream<Arguments> provideButtonsChat() {
         return Stream.of(
-                Arguments.of(START_A_CHAT, USER_QUESTION, 1),
+                Arguments.of(CALLING_A_VOLUNTEER, USER_QUESTION, 1),
                 Arguments.of(CLOSE_THE_CHAT, GREETING_SHELTER, 0)
         );
     }
@@ -667,8 +855,27 @@ class TelegramBotUpdatesListenerTest {
                 Arguments.of(START_A_CHAT),
                 Arguments.of(CLOSE_THE_CHAT),
                 Arguments.of(TAKE_AN_ANIMAL_FROM_A_SHELTER),
-                Arguments.of(SEND_REPORT),
+                Arguments.of(RECORDING_CONTACT_DETAILS),
+                Arguments.of(CALLING_A_VOLUNTEER),
+                Arguments.of(CLOSE_THE_ADD_USER),
+                Arguments.of("Корм / Хорошее, привыкание отличное / Изменений в поведении нет"),
+                Arguments.of("+7-923-456-2345 Петя"),
                 Arguments.of("Привет")
         );
     }
+
+    public static Stream<Arguments> provideButtonData() {
+        return Stream.of(
+                Arguments.of(EXAMPLE_OF_A_MESSAGE, 1),
+                Arguments.of(GREETING, 0)
+        );
+    }
+
+     public static Stream<Arguments> provideMediaType() {
+        return Stream.of(
+                Arguments.of("image/jpeg", LOADING_THE_REPORT),
+                Arguments.of("Excel", "Неправильный формат. Пришлите фотографию с форматом jpeg или png")
+        );
+    }
+
 }

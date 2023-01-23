@@ -110,6 +110,38 @@ public class VolunteerControllerTest {
         List<ReportRecord> expected = reportRecords.stream()
                 .filter(r -> r.getUser().getId().equals(userRecord.getId()))
                 .toList();
+        List<UserRecord> usersDog = userRecords.stream()
+                .filter(user -> user.getShelter() == 1)
+                .toList();
+        List<UserRecord> usersCat = userRecords.stream()
+                .filter(user -> user.getShelter() == 2)
+                .toList();
+
+        ResponseEntity<List<UserRecord>> getUsersShelterDogResponseEntity = testRestTemplate.exchange(
+                "http://localhost:" + port + "/volunteer/user/shelter?number=1",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertThat(getUsersShelterDogResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getUsersShelterDogResponseEntity.getBody())
+                .hasSize(usersDog.size())
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyInAnyOrderElementsOf(usersDog);
+
+        ResponseEntity<List<UserRecord>> getUsersShelterCatResponseEntity = testRestTemplate.exchange(
+                "http://localhost:" + port + "/volunteer/user/shelter?number=2",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertThat(getUsersShelterCatResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getUsersShelterCatResponseEntity.getBody())
+                .hasSize(usersCat.size())
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyInAnyOrderElementsOf(usersCat);
 
         ResponseEntity<List<VolunteerRecord>> getAllVolunteersResponseEntity = testRestTemplate.exchange(
                 "http://localhost:" + port + "/volunteer/",
@@ -231,6 +263,40 @@ public class VolunteerControllerTest {
         assertThat(recordResponseEntity.getBody().getAnimal()).usingRecursiveComparison().isEqualTo(animalRecord);
     }
 
+    @Test
+    public void patchExtensionPeriodUserTest() {
+        VolunteerRecord volunteerRecord = addVolunteer(generateVolunteer());
+        AnimalRecord animalRecord = addAnimal(generateAnimal(volunteerRecord));
+        UserRecord userRecord = generateUser(animalRecord);
+        UserRecord userRecord1 = userRecord;
+        userRecord1.setDate(userRecord1.getDate().plusWeeks(2));
+        userRecord1.setAnimal(animalRecord);
+
+        ResponseEntity<UserRecord> recordResponseEntity = testRestTemplate.exchange(
+                "http://localhost:" + port + "/volunteer/user/" + userRecord.getId() + "/period?number=" + 1,
+                HttpMethod.PATCH,
+                new HttpEntity<>(userRecord),
+                UserRecord.class
+        );
+
+        assertThat(recordResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(recordResponseEntity.getBody()).isNotNull();
+        assertThat(recordResponseEntity.getBody()).usingRecursiveComparison().isEqualTo(userRecord1);
+        assertThat(recordResponseEntity.getBody().getAnimal()).usingRecursiveComparison().isEqualTo(animalRecord);
+    }
+
+    @Test
+    public void sendMessageToUserTest() {
+        VolunteerRecord volunteerRecord = addVolunteer(generateVolunteer());
+        AnimalRecord animalRecord = addAnimal(generateAnimal(volunteerRecord));
+        UserRecord userRecord = generateUser(animalRecord);
+
+        ResponseEntity<String> getRecordResponseEntity = testRestTemplate.getForEntity("http://localhost:" + port + "/volunteer/user/" + userRecord.getId() + "/decision?number=1", String.class);
+
+        assertThat(getRecordResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getRecordResponseEntity.getBody()).isNotNull();
+        assertThat(getRecordResponseEntity.getBody()).isEqualTo("Сообщение отправлено");
+    }
 
     private UserRecord generateUser(AnimalRecord animalRecord) {
         UserRecord userRecord = new UserRecord();
@@ -263,7 +329,6 @@ public class VolunteerControllerTest {
 
     private VolunteerRecord generateVolunteer() {
         VolunteerRecord volunteerRecord = new VolunteerRecord();
-        volunteerRecord.setChatId(faker.number().randomNumber());
         volunteerRecord.setName(faker.name().firstName());
         volunteerRecord.setLastName(faker.name().lastName());
         return volunteerRecord;

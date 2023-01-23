@@ -34,7 +34,7 @@ public class VolunteerRecord {
         this.lastName = lastName;
     }
 
-    public Long getIdChat() {
+    public Long getChatId() {
         return chatId;
     }
 

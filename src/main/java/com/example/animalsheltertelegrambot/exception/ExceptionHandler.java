@@ -39,19 +39,19 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler(NumberNotFoundException.class)
     public ResponseEntity<String> handlesNumberNotFoundException(NumberNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Введите номер 1 или 2");
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(DateMissException.class)
     public ResponseEntity<String> handlesDateMissException(DateMissException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Пользовател не брал животное из приюта");
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(Number2NotFoundException.class)
     public ResponseEntity<String> handlesNumber2NotFoundException(Number2NotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Введите один из номеров - 1, 2, 3");
     }
 

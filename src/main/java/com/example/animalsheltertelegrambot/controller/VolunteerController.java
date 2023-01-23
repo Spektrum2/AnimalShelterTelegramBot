@@ -280,7 +280,7 @@ public class VolunteerController {
                     )
             }
     )
-    @PatchMapping("/user/{id}/period/")
+    @PatchMapping("/user/{id}/period")
     public UserRecord extensionPeriod(@Parameter(description = "Введите id пользователя", example = "1")
                                       @PathVariable Long id,
                                       @Parameter(description = "Введите 1 - увеличить испытательный срок на 14 дней. Введите 2  - увеличить испытательный срок на 30 дней", example = "1")
@@ -320,7 +320,7 @@ public class VolunteerController {
                     )
             }
     )
-    @GetMapping("/user/{id}/decision/")
+    @GetMapping("/user/{id}/decision")
     public String sendMessageToUser(@Parameter(description = "Введите id пользователя", example = "1")
                                       @PathVariable Long id,
                                       @Parameter(description = "Введите 1 - отчет заполняется плохо. Введите 2  - вы прошли испытательный срок. Введите 3 - вы не прошли испытательный срок", example = "1")

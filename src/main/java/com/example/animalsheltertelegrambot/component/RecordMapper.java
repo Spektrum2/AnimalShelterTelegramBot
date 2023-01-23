@@ -66,7 +66,7 @@ public class RecordMapper {
 
     public Volunteer toEntity(VolunteerRecord volunteerRecord) {
         Volunteer volunteer = new Volunteer();
-        volunteer.setChatId(volunteerRecord.getIdChat());
+        volunteer.setChatId(volunteerRecord.getChatId());
         volunteer.setName(volunteerRecord.getName());
         volunteer.setLastName(volunteerRecord.getLastName());
         return volunteer;
