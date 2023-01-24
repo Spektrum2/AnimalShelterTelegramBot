@@ -76,6 +76,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Объявление репозитория параметров
      */
     private final ParametersRepository parametersRepository;
+    private Pattern pattern;
+    private Random random = new Random();
 
     /**
      * Инжектим бота + репозиторий
@@ -121,52 +123,54 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             String text = update.message().text();
             Long chatId = update.message().chat().id();
-            try {
-                if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
+            if (update.message() != null && update.message().photo() == null && update.message().document() == null &&
+                    (update.message().sticker() != null || update.message().audio() != null || update.message().voice() != null || update.message().video() != null
+                    || update.message().videoNote()!= null)) {
+                mailing(chatId, GET_STICKER);
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parsePhone)) {
                     userVerification(text, chatId);
-                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseResponse)) {
                     responseToTheUser(text);
-                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null && text.matches(parseIdText)) {
                     setVolunteerChatId(text, chatId);
-                } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
+            } else if (update.message() != null && (update.message().photo() != null || update.message().document() != null || text.matches(parseText))) {
                     createReport(update.message().photo(), update.message().document(), text, chatId);
-                } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
-                    switch (text) {
-                        case START -> mainMenu(chatId);
-                        case EXIT -> mainMenu(chatId);
-                        case DOG_SHELTER -> {
-                            parametersRepository.save(new Parameters(chatId, 1));
-                            shelterMenu(chatId);
-                        }
-                        case CAT_SHELTER -> {
-                            parametersRepository.save(new Parameters(chatId, 2));
-                            shelterMenu(chatId);
-                        }
-                        case INFORMATION_SHELTER -> infoMenu(chatId);
-                        case STORY_SHELTER -> {
-                            Parameters parameters = parameters(chatId);
-                            if (parameters != null) {
-                                if (parameters.getShelter() == 1) {
-                                    mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
-                                } else if (parameters.getShelter() == 2) {
-                                    mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
-                                }
-                            } else {
-                                mainMenu(chatId);
+            } else if (update.message() != null && update.message().photo() == null && update.message().document() == null) {
+                switch (text) {
+                    case START, EXIT -> mainMenu(chatId);
+                    case DOG_SHELTER -> {
+                        parametersRepository.save(new Parameters(chatId, 1));
+                        shelterMenu(chatId);
+                    }
+                    case CAT_SHELTER -> {
+                        parametersRepository.save(new Parameters(chatId, 2));
+                        shelterMenu(chatId);
+                    }
+                    case INFORMATION_SHELTER -> infoMenu(chatId);
+                    case STORY_SHELTER -> {
+                        Parameters parameters = parameters(chatId);
+                        if (parameters != null) {
+                            if (parameters.getShelter() == 1) {
+                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_DOG);
+                            } else if (parameters.getShelter() == 2) {
+                                mailing(chatId, INFORMATION_ABOUT_THE_SHELTER_CAT);
                             }
+                        } else {
+                            mainMenu(chatId);
                         }
-                        case JOB_DESCRIPTION -> {
-                            Parameters parameters = parameters(chatId);
-                            if (parameters != null) {
-                                if (parameters.getShelter() == 1) {
-                                    mailing(chatId, WORKING_HOURS_DOG);
-                                } else if (parameters.getShelter() == 2) {
-                                    mailing(chatId, WORKING_HOURS_CAT);
-                                }
-                            } else {
-                                mainMenu(chatId);
+                    }
+                    case JOB_DESCRIPTION -> {
+                        Parameters parameters = parameters(chatId);
+                        if (parameters != null) {
+                            if (parameters.getShelter() == 1) {
+                                mailing(chatId, WORKING_HOURS_DOG);
+                            } else if (parameters.getShelter() == 2) {
+                                mailing(chatId, WORKING_HOURS_CAT);
                             }
+                        } else {
+                            mainMenu(chatId);
                         }
+                    }
                         case SAFETY -> mailing(chatId, SECURITY_MEASURES);
                         case SECURITY -> mailing(chatId, SECURITY_DATA);
                         case CALLING_A_VOLUNTEER -> {
@@ -265,12 +269,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         }
                     }
                 }
-            } catch (NullPointerException e) {
-                mailing(chatId, GET_STICKER);
-            }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+
+//    mailing(chatId, GET_STICKER);
 
     /**
      * Метод парсит стороку и заносит информацию в БД
@@ -280,7 +283,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void parsing(String text, Long id) {
         logger.info("Парсинг");
-        Pattern pattern = Pattern.compile(parsePhone);
+        pattern = Pattern.compile(parsePhone);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
             String phone = matcher.group(1);
@@ -302,7 +305,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void parsing(String text, PhotoOfAnimal photoOfAnimal, long chatId) {
         logger.info("Заполнение отчета");
-        Pattern pattern = Pattern.compile(parseText);
+        pattern = Pattern.compile(parseText);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
             String theAnimalsDiet = matcher.group(1);
@@ -323,7 +326,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void setVolunteerChatId(String text, Long id) {
         logger.info("Запись ID волонтеру");
-        Pattern pattern = Pattern.compile(parseIdText);
+        pattern = Pattern.compile(parseIdText);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
             Long idVolunteer = Long.valueOf(matcher.group(3));
@@ -370,7 +373,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void messageToTheVolunteer(Long chatId, String text) {
         logger.info("Отправка сообщения волонтеру");
-        Random random = new Random();
         List<Long> volunteerChatId = volunteerRepository.findAll().stream().map(Volunteer::getChatId).filter(Objects::nonNull).toList();
         if (volunteerChatId.isEmpty()) {
             mailing(chatId, "Волонтеры заняты");
@@ -422,7 +424,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void responseToTheUser(String text) {
         logger.info("Отправка сообщения пользователю");
-        Pattern pattern = Pattern.compile(parseResponse);
+        pattern = Pattern.compile(parseResponse);
         Matcher matcher = pattern.matcher(text);
         if (matcher.matches()) {
             long id = Long.parseLong(matcher.group(2));
