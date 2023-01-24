@@ -80,7 +80,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final ParametersRepository parametersRepository;
     private Pattern pattern;
-    private Random random = new Random();
+    private final Random random = new Random();
 
     /**
      * Инжектим бота + репозиторий
