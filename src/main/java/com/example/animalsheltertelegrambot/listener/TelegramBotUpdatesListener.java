@@ -276,8 +276,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-//    mailing(chatId, GET_STICKER);
-
     /**
      * Метод парсит стороку и заносит информацию в БД
      *
