@@ -26,7 +26,7 @@ public class TimerTask {
     /**
      * Метод для атоматического послания сообщений
      */
-    @Scheduled(cron = "0 0/1 * * * *")
+    @Scheduled(cron = "0 21 * * * *")
     @Transactional(readOnly = true)
     public void warning() {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -58,6 +58,7 @@ public class TimerTask {
         userRepository.findAll().stream()
                 .filter(user -> user != null && user.getDate().toLocalDate().equals(now.toLocalDate()))
                 .map(UserData::getAnimal)
+                .filter(animal -> animal != null && animal.getVolunteer() != null)
                 .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "У пользователя с животным id - " + animal.getId() + " закончился испытательный период")));
     }
 }
