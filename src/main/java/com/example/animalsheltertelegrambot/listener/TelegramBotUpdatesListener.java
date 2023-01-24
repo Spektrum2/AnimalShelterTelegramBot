@@ -1,7 +1,10 @@
 package com.example.animalsheltertelegrambot.listener;
 
 import com.example.animalsheltertelegrambot.model.*;
-import com.example.animalsheltertelegrambot.repository.*;
+import com.example.animalsheltertelegrambot.repository.ParametersRepository;
+import com.example.animalsheltertelegrambot.repository.ReportRepository;
+import com.example.animalsheltertelegrambot.repository.UserRepository;
+import com.example.animalsheltertelegrambot.repository.VolunteerRepository;
 import com.example.animalsheltertelegrambot.service.PhotoOfAnimalService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -13,14 +16,14 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -578,44 +581,5 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         logger.info("Запуск меню добавления пользователя");
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(CLOSE_THE_ADD_USER);
         mailing(chatId, EXAMPLE_OF_A_MESSAGE, replyKeyboardMarkup);
-    }
-
-
-    /**
-     * Метод для атоматического послания сообщений
-     */
-    @Scheduled(cron = "0 21 * * * *")
-    @Transactional(readOnly = true)
-    public void warning() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-
-        userRepository.findAll().stream()
-                .map(UserData::getReports)
-                .map(reports ->
-                        reports.stream()
-                                .reduce((first, second) -> second)
-                                .orElse(null))
-                .filter(Objects::nonNull)
-                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) == 1 || ChronoUnit.DAYS.between(report.getDate(), now) == 2)
-                .map(Report::getUserData)
-                .forEach(user -> telegramBot.execute(new SendMessage(user.getChatId(), "Сделайте отчет")));
-
-
-        userRepository.findAll().stream()
-                .map(UserData::getReports)
-                .map(reports ->
-                        reports.stream()
-                                .reduce((first, second) -> second)
-                                .orElse(null))
-                .filter(Objects::nonNull)
-                .filter(report -> ChronoUnit.DAYS.between(report.getDate(), now) > 2)
-                .map(Report::getUserData)
-                .map(UserData::getAnimal)
-                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "Пользователь с животным id - " + animal.getId() + " не делает отчеты больше 2-х дней")));
-
-        userRepository.findAll().stream()
-                .filter(user -> user != null && user.getDate().toLocalDate().equals(now.toLocalDate()))
-                .map(UserData::getAnimal)
-                .forEach(animal -> telegramBot.execute(new SendMessage(animal.getVolunteer().getChatId(), "У пользователя с животным id - " + animal.getId() + " закончился испытательный период")));
     }
 }
