@@ -1,0 +1,11 @@
+{
+  "message": {
+    "chat": {
+      "id": 123
+    },
+    "document": {
+      "file_id":"AgADAgADw6gxG_mCPAjHE7knq2P_UUJfLyLw4AAgI",
+      "mime_type": "%command%"
+    }
+  }
+}

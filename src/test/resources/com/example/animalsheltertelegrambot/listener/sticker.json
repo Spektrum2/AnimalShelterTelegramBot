@@ -1,0 +1,10 @@
+{
+  "message": {
+    "chat": {
+      "id": 123
+    },
+    "sticker": {
+      "file_id":"%command%"
+    }
+  }
+}
